@@ -3,7 +3,7 @@
 표기: [ ] 미착수 / [x] 완료 / BLOCKED: 사유
 
 ## Phase 1. 프로젝트 기반
-- [ ] T-01 Spring Boot 프로젝트 골격 생성 (Java 21, Gradle, 기획서 §25.2 패키지 구조, Swagger, 공통 응답/예외 처리)
+- [ ] T-01 Spring Boot 프로젝트 골격 생성 (Java 21, Gradle, 기획서 §25.2 패키지 구조, Swagger, 공통 응답/예외 처리) — BLOCKED: AGENTS.md가 지정한 기준 문서 `specs/game-qa-copilot-final-spec.md`가 없음
 - [ ] T-02 PostgreSQL 연결 + Flyway 설정 + V1 마이그레이션 (User, Project 테이블 — 기획서 §15.1~15.2)
 - [ ] T-03 Spring Security 로그인/로그아웃/me API + USER·QA 역할 분리 (기획서 §16.1, §26 작업1)
 - [ ] T-04 프로젝트 생성(QA)·목록·상세 API + 권한 검증 403 (기획서 §16.2)
