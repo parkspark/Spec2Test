@@ -5,11 +5,22 @@
 - DECISION NEEDED 항목은 사람이 답을 적은 뒤 BLOCKED를 해제한다.
 
 ## DECISION NEEDED (사람 확인 대기)
-(없음)
+
 
 ---
 (이하 회차 기록)
 
+## [2026-07-14 13:28] 사람 개입 — T-02 재개 지침 작성
+- 원인: H2 PostgreSQL 호환 모드가 프로젝트에 잡힌 버전에서 INSERT...RETURNING 미지원
+- 결정: 테스트를 DB 비종속적으로 재작성 (INSERT 후 별도 SELECT로 생성 ID 확인). RETURNING 문법 자체를 프로덕션/테스트 코드에서 사용하지 않는다.
+- 다음 회차는 이 지침대로 DatabaseMigrationTest만 수정하고 나머지 코드는 그대로 유지할 것
+
+## [2026-07-14 12:34] T-02 PostgreSQL 연결 + Flyway 설정 + V1 마이그레이션 — BLOCKED
+- 차단 사유: 검증 실패 후 허용된 수정 시도 3회를 소진했으며, 최종 실행에서 H2 PostgreSQL 호환 모드가 테스트의 `INSERT ... RETURNING` 문법을 지원하지 않아 `DatabaseMigrationTest`가 실패함
+- 구현 내용: PostgreSQL/JPA/Flyway 의존성과 환경 변수 기반 DB 설정, User·Project V1 마이그레이션, H2 기반 마이그레이션 제약조건 테스트를 작성했으나 커밋하지 않음
+- 생성/수정 파일: backend/build.gradle, backend/src/main/resources/application.yml, backend/src/main/resources/db/migration/V1__create_users_and_projects.sql, backend/src/test/resources/application.yml, backend/src/test/java/com/example/gameqacopilot/DatabaseMigrationTest.java
+- 테스트: `cd backend && ./gradlew test` 실패 (6개 중 1개 실패: DatabaseMigrationTest.java:31, H2 INSERT RETURNING 구문 오류)
+- 다음 작업자를 위한 메모: 테스트의 생성 ID 조회를 H2/PostgreSQL 공통 방식으로 바꾼 뒤 전체 테스트를 다시 실행할 것. 현재 변경은 작업 트리에 남아 있고 커밋하지 않았음
 ## [2026-07-14 12:15] T-01 Spring Boot 프로젝트 골격 생성 — DONE
 - 구현 내용: Java 21/Spring Boot 3.5.16 Gradle 프로젝트와 §25.2 패키지 골격을 구성함.
   전역 CORS 설정, Swagger/OpenAPI, 공통 응답 및 RFC 9457 기반 예외 처리를 추가함.

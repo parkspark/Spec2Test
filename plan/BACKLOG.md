@@ -4,7 +4,7 @@
 
 ## Phase 1. 프로젝트 기반
 - [x] T-01 Spring Boot 프로젝트 골격 생성 (Java 21, Gradle, 기획서 §25.2 패키지 구조, Swagger, 공통 응답/예외 처리)
-- [ ] T-02 PostgreSQL 연결 + Flyway 설정 + V1 마이그레이션 (User, Project 테이블 — 기획서 §15.1~15.2)
+- [ ] T-02 PostgreSQL 연결 + Flyway 설정 + V1 마이그레이션 (User, Project 테이블 — 기획서 §15.1~15.2) → 재개 지침: DatabaseMigrationTest에서 INSERT...RETURNING 대신 INSERT 후 별도 SELECT로 생성 ID를 조회하도록 테스트를 재작성할 것. (H2 PostgreSQL 호환 모드의 RETURNING 미지원 문제 회피)
 - [ ] T-03 Spring Security 로그인/로그아웃/me API + USER·QA 역할 분리 (기획서 §16.1, §26 작업1)
 - [ ] T-04 프로젝트 생성(QA)·목록·상세 API + 권한 검증 403 (기획서 §16.2)
 - [ ] T-05 React 프로젝트 골격 (Vite+TS, 라우팅, axios, TanStack Query, 로그인 화면, 역할별 UI 분기)
