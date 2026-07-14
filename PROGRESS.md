@@ -14,6 +14,12 @@
 ---
 (이하 회차 기록)
 
+## [2026-07-14 14:40] 사람 개입 — T-05 실제 완료 확인
+- vite.config.ts에 pool: 'threads' 적용 후 npm test -- --run 로컬 통과 확인 (Test Files 1 passed, Tests 2 passed)
+- T-05는 실제로 완료된 상태였음 (BLOCKED 라벨은 테스트 실행 환경 문제로 인한 것)
+ → BACKLOG DONE 처리
+- T-04는 DECISION NEEDED 답변만 반영됐고 실제 구현은 안 된 상태로 확인됨 → BLOCKED 라벨만 제거, 미완료 상태 유지
+
 ## [2026-07-14 14:21] T-05 React 프로젝트 골격 — BLOCKED
 - 차단 사유: 허용된 수정 시도 3회를 소진했으며, `npm test -- --run`에서 Vitest가 Vite 설정을 로드하는 중 Windows 샌드박스의 자식 프로세스 실행이 `spawn EPERM`으로 차단됨
 - 구현 내용: 기존 Vite 템플릿에 React Router·TanStack Query·Axios·React Hook Form/Zod와 최소 shadcn/ui 컴포넌트를 연결하고, 실제 세션 API 기반 로그인 및 QA 전용 프로젝트 생성 버튼을 구현했으나 커밋하지 않음
