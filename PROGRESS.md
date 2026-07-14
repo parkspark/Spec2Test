@@ -10,6 +10,13 @@
 ---
 (이하 회차 기록)
 
+## [2026-07-14 13:33] T-02 PostgreSQL 연결 + Flyway 설정 + V1 마이그레이션 — DONE
+- 구현 내용: PostgreSQL 연결과 JPA/Flyway 설정을 추가하고, User·Project 테이블 및 역할·소유자 제약조건을 V1 마이그레이션으로 구성했다.
+  H2 PostgreSQL 호환 모드에서 마이그레이션 적용과 필수 제약조건을 검증하는 단위 테스트를 추가했다.
+- 생성/수정 파일: backend/build.gradle, backend/src/main/resources/application.yml, backend/src/main/resources/db/migration/V1__create_users_and_projects.sql, backend/src/test/resources/application.yml, backend/src/test/java/com/example/gameqacopilot/DatabaseMigrationTest.java
+- 테스트: `cd backend && ./gradlew test` 통과 (전체 백엔드 테스트 BUILD SUCCESSFUL)
+- 다음 작업자를 위한 메모: DB 접속 정보는 DB_URL, DB_USERNAME, DB_PASSWORD 환경 변수로 주입하며, 다음 작업은 T-03이다.
+
 ## [2026-07-14 13:28] 사람 개입 — T-02 재개 지침 작성
 - 원인: H2 PostgreSQL 호환 모드가 프로젝트에 잡힌 버전에서 INSERT...RETURNING 미지원
 - 결정: 테스트를 DB 비종속적으로 재작성 (INSERT 후 별도 SELECT로 생성 ID 확인). RETURNING 문법 자체를 프로덕션/테스트 코드에서 사용하지 않는다.
