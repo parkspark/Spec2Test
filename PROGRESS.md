@@ -6,9 +6,20 @@
 
 ## DECISION NEEDED (사람 확인 대기)
 
+- T-04: 프로젝트 생성 요청에는 status 입력이 없지만 `Project.status`는 NOT NULL이다. 생성 시 사용할 초기값과 허용 상태값을 결정해야 한다.
+→ 답변: 허용값 ACTIVE/ARCHIVED, 생성 시 기본값 ACTIVE로 고정.
+    상태 변경 API는 MVP 범위에 없음 (기획서 §16.2 프로젝트 수정 보류와 일치).
+    T-04는 생성 시 ACTIVE로만 저장하면 됨.
 
 ---
 (이하 회차 기록)
+
+## [2026-07-14 14:21] T-05 React 프로젝트 골격 — BLOCKED
+- 차단 사유: 허용된 수정 시도 3회를 소진했으며, `npm test -- --run`에서 Vitest가 Vite 설정을 로드하는 중 Windows 샌드박스의 자식 프로세스 실행이 `spawn EPERM`으로 차단됨
+- 구현 내용: 기존 Vite 템플릿에 React Router·TanStack Query·Axios·React Hook Form/Zod와 최소 shadcn/ui 컴포넌트를 연결하고, 실제 세션 API 기반 로그인 및 QA 전용 프로젝트 생성 버튼을 구현했으나 커밋하지 않음
+- 생성/수정 파일: frontend/package.json, frontend/package-lock.json, frontend/vite.config.ts, frontend/src/App.tsx, frontend/src/App.test.tsx, frontend/src/main.tsx, frontend/src/components/ui/, frontend/src/lib/, frontend/src/test/, frontend/src/*.css
+- 테스트: `npm run build` 통과; `npm test -- --run` 실패 (Vitest startup error: Vite externalize-deps의 `spawn EPERM`)
+- 다음 작업자를 위한 메모: Vite 빌드는 `--configLoader native`로 통과한다. Vitest에도 네이티브 config loader를 적용하거나 자식 프로세스 실행이 허용된 환경에서 테스트를 재실행한 뒤 완료 처리할 것. 작업 전부터 존재한 loop.sh 변경은 본 작업과 무관하므로 커밋에서 제외할 것.
 
 ## [2026-07-14 14:01] T-03 Spring Security 로그인/로그아웃/me API + USER·QA 역할 분리 — DONE
 - 구현 내용: BCrypt 비밀번호 검증과 HTTP 세션 기반 로그인·로그아웃·현재 사용자 조회 API를 구현했다.

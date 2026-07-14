@@ -7,7 +7,8 @@
 - [x] T-02 PostgreSQL 연결 + Flyway 설정 + V1 마이그레이션 (User, Project 테이블 — 기획서 §15.1~15.2)
 - [x] T-03 Spring Security 로그인/로그아웃/me API + USER·QA 역할 분리 (기획서 §16.1, §26 작업1)
 - [ ] T-04 프로젝트 생성(QA)·목록·상세 API + 권한 검증 403 (기획서 §16.2)
-- [ ] T-05 React 프로젝트 골격 (Vite+TS, 라우팅, axios, TanStack Query, 로그인 화면, 역할별 UI 분기)
+     → status는 생성 시 항상 ACTIVE로 고정 저장 (PROGRESS.md DECISION NEEDED 답변 참고)
+- [ ] T-05 React 프로젝트 골격 (Vite+TS, 라우팅, axios, TanStack Query, 로그인 화면, 역할별 UI 분기) — BLOCKED: Vitest 설정 로딩 중 Windows 샌드박스의 자식 프로세스 실행이 `spawn EPERM`으로 차단됨
 
 ## Phase 2. PDF 기획서 처리
 - [ ] T-06 PlanningDocument 테이블 마이그레이션 + PDF 업로드 API (형식/크기/암호화/손상 검증 — 기획서 §15.3, §16.3, §22.1)

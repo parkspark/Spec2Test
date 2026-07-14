@@ -1,121 +1,136 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import axios from 'axios'
+import { useForm } from 'react-hook-form'
+import { Navigate, Route, Routes, useNavigate } from 'react-router-dom'
+import { z } from 'zod'
+import { Button } from './components/ui/button'
+import { Input } from './components/ui/input'
 import './App.css'
 
-function App() {
-  const [count, setCount] = useState(0)
+export type User = {
+  id: number
+  email: string
+  name: string
+  role: 'USER' | 'QA'
+}
+
+type ApiResponse<T> = { data: T }
+
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_URL ?? 'http://localhost:8080',
+  withCredentials: true,
+})
+
+const loginSchema = z.object({
+  email: z.email('??? ???? ?????.'),
+  password: z.string().min(1, '????? ?????.'),
+})
+
+type LoginValues = z.infer<typeof loginSchema>
+
+export function LoginForm({
+  onLogin,
+  errorMessage,
+}: {
+  onLogin: (values: LoginValues) => Promise<void>
+  errorMessage?: string
+}) {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginValues>({ resolver: zodResolver(loginSchema) })
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
+    <main className="auth-layout">
+      <form className="card login-card" onSubmit={handleSubmit(onLogin)} noValidate>
         <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
+          <p className="eyebrow">GAME QA COPILOT</p>
+          <h1>Spec2Test</h1>
+          <p>??? ??? ?? ??? ???? ?????.</p>
         </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
+
+        <label>
+          ???
+          <Input type="email" autoComplete="email" {...register('email')} />
+          {errors.email && <span className="error">{errors.email.message}</span>}
+        </label>
+
+        <label>
+          ????
+          <Input type="password" autoComplete="current-password" {...register('password')} />
+          {errors.password && <span className="error">{errors.password.message}</span>}
+        </label>
+
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? '??? ??' : '???'}
+        </Button>
+        {errorMessage && <p className="error" role="alert">{errorMessage}</p>}
+      </form>
+    </main>
+  )
+}
+
+export function ProjectHome({ user }: { user: User }) {
+  return (
+    <main className="page-shell">
+      <header>
+        <div>
+          <p className="eyebrow">{user.role}</p>
+          <h1>????</h1>
+        </div>
+        {user.role === 'QA' && <Button>? ????</Button>}
+      </header>
+
+      <section className="card empty-state" aria-label="???? ??">
+        <h2>???? ??</h2>
+        <p>???? API? ???? ?????, ??, ???? QA ??? ?????.</p>
       </section>
+    </main>
+  )
+}
 
-      <div className="ticks"></div>
+function App() {
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
+  const userQuery = useQuery({
+    queryKey: ['me'],
+    queryFn: async () => (await api.get<ApiResponse<User>>('/api/auth/me')).data.data,
+    retry: false,
+  })
+  const login = useMutation({
+    mutationFn: async (values: LoginValues) =>
+      (await api.post<ApiResponse<User>>('/api/auth/login', values)).data.data,
+    onSuccess: (user) => {
+      queryClient.setQueryData(['me'], user)
+      navigate('/projects')
+    },
+  })
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+  if (userQuery.isPending) return <main className="loading">?? ?? ??</main>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+  return (
+    <Routes>
+      <Route
+        path="/login"
+        element={
+          userQuery.data ? (
+            <Navigate to="/projects" replace />
+          ) : (
+            <LoginForm
+              onLogin={async (values) => { await login.mutateAsync(values) }}
+              errorMessage={login.isError ? '??? ?? ????? ?????.' : undefined}
+            />
+          )
+        }
+      />
+      <Route
+        path="/projects"
+        element={userQuery.data ? <ProjectHome user={userQuery.data} /> : <Navigate to="/login" replace />}
+      />
+      <Route path="*" element={<Navigate to={userQuery.data ? '/projects' : '/login'} replace />} />
+    </Routes>
   )
 }
 
