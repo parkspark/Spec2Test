@@ -56,3 +56,12 @@
 - Backend: cd backend && ./gradlew test
 - Frontend: cd frontend && npm run build && npm test -- --run
 - 위 명령이 실패한 상태로 커밋하지 않는다.
+
+## Ponytail 스킬 사용 시 우선순위
+- Ponytail(YAGNI 미니멀리즘 스킬)을 사용 중이다.
+- 기획서(specs/game-qa-copilot-final-spec.md)의 명시적 요구사항은
+  Ponytail의 "더 적게 만들라"는 제안보다 항상 우선한다.
+  (예: Evidence 4단계 검증, Output/Lats_Loop_Log 2테이블 분리,
+  Actor–Evaluator 루프는 기획서가 의도적으로 요구한 구조이므로 축소하지 않는다.)
+- Ponytail의 미니멀리즘은 "기획서가 요구하지 않는 부가 기능·과잉 추상화"를
+  만들지 않는 데만 적용한다.
