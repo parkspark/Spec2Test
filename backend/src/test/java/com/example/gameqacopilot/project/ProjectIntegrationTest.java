@@ -31,6 +31,7 @@ class ProjectIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        jdbcClient.sql("DELETE FROM planning_documents").update();
         jdbcClient.sql("DELETE FROM projects").update();
         jdbcClient.sql("DELETE FROM users").update();
         jdbcClient.sql("INSERT INTO users (email, password, name, role) VALUES (?, ?, ?, ?)")

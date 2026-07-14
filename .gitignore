@@ -5,6 +5,7 @@ backend/.gradle/
 .gradle-local/
 backend/bin/
 backend/out/
+backend/data/
 *.class
 
 

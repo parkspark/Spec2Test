@@ -10,6 +10,13 @@
 
 ---
 
+## [2026-07-14 16:40] T-06 PlanningDocument 테이블 마이그레이션 + PDF 업로드 API — DONE
+- 구현 내용: PlanningDocument V2 마이그레이션과 DTO 기반 QA 전용 업로드 API를 추가했다.
+  PDF 형식·크기·암호화·손상을 검증하고 원본 파일, 페이지 수, 처리 상태와 실패 사유를 저장한다.
+- 생성/수정 파일: backend/build.gradle, document 하위 Entity/DTO/Repository/Service/Controller, V2__create_planning_documents.sql, PlanningDocument 테스트, 기존 테스트 정리 순서
+- 테스트: `cd backend && ./gradlew test` 전체 통과 (Gradle BUILD SUCCESSFUL, 단위·통합 테스트 포함)
+- 다음 작업자를 위한 메모: 다음 작업은 T-07이다. 페이지별 텍스트·이미지·좌표 추출과 pageContents 저장은 이번 T-06 범위에서 제외했다.
+
 ## [2026-07-14 16:22] T-04 프로젝트 생성·목록·상세 API + 권한 검증 — DONE
 - 구현 내용: QA 전용 프로젝트 생성과 USER·QA 목록/상세 조회 API를 구현하고 생성자 User 및 ACTIVE 상태를 연결했다.
   DTO 응답, 403 권한 제한, 404 미존재 처리와 요청 validation 400 매핑을 적용했다.

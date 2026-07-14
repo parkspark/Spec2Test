@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "projects")
-class Project {
+public class Project {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -49,7 +49,7 @@ class Project {
         this.updatedAt = createdAt;
     }
 
-    Long getId() {
+    public Long getId() {
         return id;
     }
 

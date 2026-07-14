@@ -21,7 +21,7 @@
 - [x] T-05 React 프로젝트 골격 (Vite+TS, 라우팅, axios, TanStack Query, 로그인 화면, 역할별 UI 분기)
 
 ## Phase 2. PDF 기획서 처리
-- [ ] T-06 PlanningDocument 테이블 마이그레이션 + PDF 업로드 API (형식/크기/암호화/손상 검증 — 기획서 §15.3, §16.3, §22.1)
+- [x] T-06 PlanningDocument 테이블 마이그레이션 + PDF 업로드 API (형식/크기/암호화/손상 검증 — 기획서 §15.3, §16.3, §22.1)
 - [ ] T-07 페이지별 텍스트 추출 + 페이지 이미지 생성 + 텍스트 좌표 추출 → pageContents JSONB 저장 (기획서 §10.1)
 - [ ] T-08 기획서 조회 API (문서/페이지 단위) + 프론트 PDF 미리보기 화면 (기획서 §16.3, §17.5)
 
