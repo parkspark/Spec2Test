@@ -2,9 +2,11 @@
 backend/build/
 backend/.gradle/
 .gradle-user-home/
+.gradle-local/
 backend/bin/
 backend/out/
 *.class
+
 
 # Frontend (Node/Vite)
 frontend/node_modules/

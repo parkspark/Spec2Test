@@ -15,14 +15,10 @@ import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.context.annotation.Import;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@Import(AuthIntegrationTest.QaEndpoint.class)
 class AuthIntegrationTest {
 
     @Autowired
@@ -77,8 +73,11 @@ class AuthIntegrationTest {
         mockMvc.perform(post("/api/projects").with(user("user@example.com").roles("USER")))
                 .andExpect(status().isForbidden());
 
-        mockMvc.perform(post("/api/projects").with(user("qa@example.com").roles("QA")))
-                .andExpect(status().isOk());
+        mockMvc.perform(post("/api/projects")
+                        .with(user("qa@example.com").roles("QA"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -98,10 +97,4 @@ class AuthIntegrationTest {
                 .andExpect(status().isUnauthorized());
     }
 
-    @RestController
-    static class QaEndpoint {
-
-        @PostMapping("/api/projects")
-        void createProject() {}
-    }
 }

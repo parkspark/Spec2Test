@@ -6,7 +6,7 @@
 - [x] T-01 Spring Boot 프로젝트 골격 생성 (Java 21, Gradle, 기획서 §25.2 패키지 구조, Swagger, 공통 응답/예외 처리)
 - [x] T-02 PostgreSQL 연결 + Flyway 설정 + V1 마이그레이션 (User, Project 테이블 — 기획서 §15.1~15.2)
 - [x] T-03 Spring Security 로그인/로그아웃/me API + USER·QA 역할 분리 (기획서 §16.1, §26 작업1)
-- [ ] T-04 프로젝트 생성(QA)·목록·상세 API + 권한 검증 403 (기획서 §16.2)
+- [x] T-04 프로젝트 생성(QA)·목록·상세 API + 권한 검증 403 (기획서 §16.2)
      → status는 생성 시 항상 ACTIVE로 고정 저장 (PROGRESS.md DECISION NEEDED 답변 참고)
      → 재개 지침: AuthIntegrationTest.allowsOnlyQaToCallQaEndpoints 테스트 중
         QA 사용자가 빈 JSON({})으로 요청 시 400을 기대하나 500이 발생함.

@@ -6,12 +6,16 @@
 
 ## DECISION NEEDED (사람 확인 대기)
 
-- T-04: 프로젝트 생성 요청에는 status 입력이 없지만 `Project.status`는 NOT NULL이다. 생성 시 사용할 초기값과 허용 상태값을 결정해야 한다.
-→ 답변: 허용값 ACTIVE/ARCHIVED, 생성 시 기본값 ACTIVE로 고정.
-    상태 변경 API는 MVP 범위에 없음 (기획서 §16.2 프로젝트 수정 보류와 일치).
-    T-04는 생성 시 ACTIVE로만 저장하면 됨.
+- 없음
 
 ---
+
+## [2026-07-14 16:22] T-04 프로젝트 생성·목록·상세 API + 권한 검증 — DONE
+- 구현 내용: QA 전용 프로젝트 생성과 USER·QA 목록/상세 조회 API를 구현하고 생성자 User 및 ACTIVE 상태를 연결했다.
+  DTO 응답, 403 권한 제한, 404 미존재 처리와 요청 validation 400 매핑을 적용했다.
+- 생성/수정 파일: backend project 도메인(Entity·DTO·Repository·Service·Controller), GlobalExceptionHandler, ProjectIntegrationTest, AuthIntegrationTest, .gitignore
+- 테스트: `cd backend && ./gradlew test` 전체 통과 (5 actionable tasks, BUILD SUCCESSFUL)
+- 다음 작업자를 위한 메모: 시스템 GRADLE_USER_HOME 권한 문제 시 저장소 `.gradle-local` 경로로 환경 변수를 재지정할 것. 다음 작업은 T-06이다.
 (이하 회차 기록)
 
 ## [2026-07-14 16:16] 사람 개입 — T-04 재개 지침 작성
