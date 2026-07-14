@@ -17,6 +17,7 @@ for i in $(seq 1 "$MAX_ITER"); do
 
   codex exec \
     --sandbox workspace-write \
+    --dangerously-bypass-hook-trust \
     # 다른 루트에서 loop.sh 실행할 때 사용
     -C "$REPO_DIR" \
     "$(cat PROMPT.md)"
