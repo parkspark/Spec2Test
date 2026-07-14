@@ -10,6 +10,13 @@
 
 ---
 
+## [2026-07-14 17:03] T-08 기획서 조회 API (문서/페이지 단위) + 프론트 PDF 미리보기 화면 — BLOCKED
+- 차단 사유: 허용된 수정 3회 후에도 `./gradlew test`가 Spring Data의 `PlanningDocumentRepository.findAllByProjectIdOrderByCreatedAtDesc`를 엔티티의 존재하지 않는 `projectId` 속성으로 해석해 ApplicationContext 생성 단계에서 실패했다.
+- 구현 내용: 문서 목록·상세·페이지 텍스트/좌표·페이지 이미지 조회 API와 3열 PDF 미리보기 화면, 페이지 이동 및 단위·통합 테스트를 작성했으나 검증 실패로 완료 처리하지 않았다.
+- 생성/수정 파일: document controller/dto/repository/service 및 테스트, frontend App.tsx/App.css/App.test.tsx/package.json, plan/BACKLOG.md, PROGRESS.md (모두 미커밋)
+- 테스트: 프론트 빌드 통과, `npx vitest --configLoader native --run` 3개 통과. 백엔드 21개 중 ApplicationContext 의존 테스트 15개 실패로 전체 검증 실패.
+- 다음 작업자를 위한 메모: 파생 쿼리를 엔티티 연관 경로에 맞게 수정한 뒤 백엔드·프론트 지정 검증 명령을 모두 재실행해야 한다. 이번 회차는 규칙에 따라 추가 수정·커밋하지 않았다.
+
 ## [2026-07-14 16:49] T-07 페이지별 텍스트 추출 + 페이지 이미지 생성 + 텍스트 좌표 추출 — DONE
 - 구현 내용: PDFBox로 페이지별 텍스트와 상대 비율 좌표를 추출해 pageContents JSONB에 저장했다.
   문서별 디렉터리에 원본 PDF와 페이지 PNG를 함께 저장하고 처리 완료 상태를 READY로 전환했다.

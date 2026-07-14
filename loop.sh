@@ -21,6 +21,10 @@ for i in $(seq 1 "$MAX_ITER"); do
     break
   fi
 
+  # 실행 전 예방적 ACL 리셋 (지난 회차에 남은 DENY 제거)
+  MSYS_NO_PATHCONV=1 icacls .git /reset /T /C >/dev/null 2>&1 || true
+
+
   ATTEMPT=1
   EXIT_CODE=1
   while [ "$ATTEMPT" -le "$RETRY_MAX" ] && [ "$EXIT_CODE" -ne 0 ]; do
@@ -45,21 +49,12 @@ for i in $(seq 1 "$MAX_ITER"); do
     echo "❌ ${RETRY_MAX}회 재시도에도 실패 (exit $EXIT_CODE). 이번 회차는 실패로 처리."
   fi
 
-  # --- ACL DENY 재발 대응: 리셋 후 커밋 안 된 변경사항 자동 커밋 ---
-  MSYS_NO_PATHCONV=1 icacls .git /reset /T /C >/dev/null 2>&1 || true
-
-  if [ -n "$(git status --porcelain)" ]; then
-    echo "⚠️ 커밋되지 않은 변경 감지 (ACL 문제로 추정) — 리셋 후 자동 커밋 시도"
-    git add -A
-    git commit -m "[auto] ACL 권한 문제로 지연된 자동 커밋 (회차 #$i, 라벨 확인 필요)"
-  fi
-
-  # 검증: 커밋이 실제로 생겼는지 확인
+  # 커밋 여부만 확인, 강제 커밋은 하지 않음
   if git log --oneline -1 --since="10 minutes ago" | grep -q .; then
     FAIL_STREAK=0
   else
     FAIL_STREAK=$((FAIL_STREAK + 1))
-    echo "⚠️ 이번 회차에 커밋 없음 (연속 $FAIL_STREAK회)"
+    echo "⚠️ 이번 회차에 커밋 없음 (연속 $FAIL_STREAK회) — git status로 원인 확인 필요"
   fi
 
   if [ "$FAIL_STREAK" -ge 3 ]; then

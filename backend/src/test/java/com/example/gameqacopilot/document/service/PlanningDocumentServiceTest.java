@@ -15,6 +15,7 @@ import com.example.gameqacopilot.project.Project;
 import com.example.gameqacopilot.project.ProjectRepository;
 import com.example.gameqacopilot.user.User;
 import com.example.gameqacopilot.user.UserRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -32,7 +33,8 @@ class PlanningDocumentServiceTest {
         when(users.findById(2L)).thenReturn(Optional.of(mock(User.class)));
         var multipart = new MultipartProperties();
         multipart.setMaxFileSize(DataSize.ofBytes(5));
-        var service = new PlanningDocumentService(documents, projects, users, multipart, mock(PdfDocumentProcessor.class), "build/test-documents");
+        var service = new PlanningDocumentService(documents, projects, users, multipart,
+                mock(PdfDocumentProcessor.class), new ObjectMapper(), "build/test-documents");
         var file = new MockMultipartFile("file", "plan.pdf", "application/pdf", "%PDF-1.7".getBytes());
 
         assertThatThrownBy(() -> service.upload(1L, 2L, "Plan", file))

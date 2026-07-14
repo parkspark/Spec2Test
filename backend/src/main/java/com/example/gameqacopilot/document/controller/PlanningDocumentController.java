@@ -6,6 +6,7 @@ import com.example.gameqacopilot.document.dto.PlanningDocumentResponse;
 import com.example.gameqacopilot.document.service.PlanningDocumentService;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import java.util.List;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
@@ -20,6 +21,11 @@ public class PlanningDocumentController {
 
     public PlanningDocumentController(PlanningDocumentService documentService) {
         this.documentService = documentService;
+    }
+
+    @GetMapping
+    ApiResponse<List<PlanningDocumentResponse>> findAll(@PathVariable Long projectId) {
+        return ApiResponse.of(documentService.findAll(projectId));
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

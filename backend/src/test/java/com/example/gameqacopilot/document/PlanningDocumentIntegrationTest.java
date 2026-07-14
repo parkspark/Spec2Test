@@ -2,6 +2,7 @@ package com.example.gameqacopilot.document;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -65,6 +66,41 @@ class PlanningDocumentIntegrationTest {
     }
 
     @Test
+    void userCanListDocumentAndReadPageTextLocationAndImage() throws Exception {
+        var file = new MockMultipartFile("file", "plan.pdf", "application/pdf", pdf(false, "Free draw once daily"));
+        mockMvc.perform(multipart("/api/projects/{projectId}/documents", projectId).file(file)
+                .param("title", "Game plan").with(user(qa))).andExpect(status().isOk());
+        Long documentId = jdbcClient.sql("SELECT id FROM planning_documents").query(Long.class).single();
+
+        mockMvc.perform(get("/api/projects/{projectId}/documents", projectId).with(user(user)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data[0].id").value(documentId));
+        mockMvc.perform(get("/api/documents/{documentId}", documentId).with(user(user)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.title").value("Game plan"));
+        mockMvc.perform(get("/api/documents/{documentId}/pages/1", documentId).with(user(user)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.elements[0].text").value("Free draw once daily"))
+                .andExpect(jsonPath("$.data.elements[0].boundingBox.x").isNumber())
+                .andExpect(jsonPath("$.data.imageUrl").value("/api/documents/" + documentId + "/pages/1/image"));
+        mockMvc.perform(get("/api/documents/{documentId}/pages/1/image", documentId).with(user(user)))
+                .andExpect(status().isOk())
+                .andExpect(result -> org.assertj.core.api.Assertions.assertThat(result.getResponse().getContentType())
+                        .isEqualTo("image/png"));
+    }
+
+    @Test
+    void pageOutsideDocumentRangeIsNotFound() throws Exception {
+        mockMvc.perform(multipart("/api/projects/{projectId}/documents", projectId)
+                .file(new MockMultipartFile("file", "plan.pdf", "application/pdf", pdf(false, null)))
+                .param("title", "Game plan").with(user(qa))).andExpect(status().isOk());
+        Long documentId = jdbcClient.sql("SELECT id FROM planning_documents").query(Long.class).single();
+
+        mockMvc.perform(get("/api/documents/{documentId}/pages/2", documentId).with(user(user)))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     void rejectsInvalidEncryptedDamagedOversizedFilesAndPersistsFailures() throws Exception {
         assertRejected(new MockMultipartFile("file", "plan.txt", "text/plain", "text".getBytes()));
         assertRejected(new MockMultipartFile("file", "broken.pdf", "application/pdf", "%PDF-broken".getBytes()));
@@ -119,6 +155,4 @@ class PlanningDocumentIntegrationTest {
         return new CurrentUser(id, email, "unused", role.name(), role);
     }
 }
-
-
 
