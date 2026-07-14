@@ -33,6 +33,7 @@ for i in $(seq 1 "$MAX_ITER"); do
       --dangerously-bypass-hook-trust \
       -c model_reasoning_effort="medium" \
       -c approval_policy="never" \
+      -c sandbox_workspace_write.network_access=true \
       -C "$REPO_DIR" \
       "$(cat PROMPT.md)"
     EXIT_CODE=$?
