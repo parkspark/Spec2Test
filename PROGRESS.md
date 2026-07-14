@@ -10,6 +10,13 @@
 
 ---
 
+## [2026-07-14 16:49] T-07 페이지별 텍스트 추출 + 페이지 이미지 생성 + 텍스트 좌표 추출 — DONE
+- 구현 내용: PDFBox로 페이지별 텍스트와 상대 비율 좌표를 추출해 pageContents JSONB에 저장했다.
+  문서별 디렉터리에 원본 PDF와 페이지 PNG를 함께 저장하고 처리 완료 상태를 READY로 전환했다.
+- 생성/수정 파일: PdfDocumentProcessor, PlanningDocument, PlanningDocumentService, PDF 처리 단위·통합 테스트
+- 테스트: `cd backend && ./gradlew test` 전체 통과 (Gradle BUILD SUCCESSFUL)
+- 다음 작업자를 위한 메모: 다음 작업은 T-08이다. 생성된 페이지 이미지는 원본 PDF와 같은 디렉터리의 page-{번호}.png에 있다.
+
 ## [2026-07-14 16:40] T-06 PlanningDocument 테이블 마이그레이션 + PDF 업로드 API — DONE
 - 구현 내용: PlanningDocument V2 마이그레이션과 DTO 기반 QA 전용 업로드 API를 추가했다.
   PDF 형식·크기·암호화·손상을 검증하고 원본 파일, 페이지 수, 처리 상태와 실패 사유를 저장한다.

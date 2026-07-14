@@ -2,6 +2,7 @@ package com.example.gameqacopilot.document.service;
 
 import com.example.gameqacopilot.document.dto.PlanningDocumentResponse;
 import com.example.gameqacopilot.document.entity.PlanningDocument;
+import com.example.gameqacopilot.document.parser.PdfDocumentProcessor;
 import com.example.gameqacopilot.document.repository.PlanningDocumentRepository;
 import com.example.gameqacopilot.project.ProjectRepository;
 import com.example.gameqacopilot.user.UserRepository;
@@ -25,6 +26,7 @@ public class PlanningDocumentService {
     private final ProjectRepository projects;
     private final UserRepository users;
     private final MultipartProperties multipartProperties;
+    private final PdfDocumentProcessor processor;
     private final Path storageRoot;
 
     public PlanningDocumentService(
@@ -32,11 +34,13 @@ public class PlanningDocumentService {
             ProjectRepository projects,
             UserRepository users,
             MultipartProperties multipartProperties,
+            PdfDocumentProcessor processor,
             @Value("${app.document.storage-path:./data/documents}") String storagePath) {
         this.documents = documents;
         this.projects = projects;
         this.users = users;
         this.multipartProperties = multipartProperties;
+        this.processor = processor;
         this.storageRoot = Path.of(storagePath).toAbsolutePath().normalize();
     }
 
@@ -50,9 +54,13 @@ public class PlanningDocumentService {
             byte[] content = validateAndRead(file);
             int pageCount = validatePdf(content);
             Files.createDirectories(storageRoot);
-            Path storedPath = storageRoot.resolve(UUID.randomUUID() + ".pdf");
+            Path documentDirectory = storageRoot.resolve(UUID.randomUUID().toString());
+            Files.createDirectories(documentDirectory);
+            Path storedPath = documentDirectory.resolve("original.pdf");
             Files.write(storedPath, content);
             document.uploaded(storedPath.toString(), pageCount);
+            var processed = processor.process(content, documentDirectory);
+            document.processed(processed.extractedText(), processed.pageContents());
             return PlanningDocumentResponse.from(documents.save(document));
         } catch (IllegalArgumentException exception) {
             document.failed(exception.getMessage());

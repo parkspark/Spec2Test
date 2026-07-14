@@ -49,6 +49,13 @@ public class PlanningDocument {
         this.processingStatus = DocumentProcessingStatus.UPLOADED;
         this.updatedAt = LocalDateTime.now();
     }
+    public void processed(String extractedText, String pageContents) {
+        this.extractedText = extractedText;
+        this.pageContents = pageContents;
+        this.processingStatus = DocumentProcessingStatus.READY;
+        this.updatedAt = LocalDateTime.now();
+    }
+
 
     public void failed(String reason) {
         this.processingStatus = DocumentProcessingStatus.FAILED;
@@ -64,6 +71,8 @@ public class PlanningDocument {
     public String getMimeType() { return mimeType; }
     public long getFileSize() { return fileSize; }
     public Integer getPageCount() { return pageCount; }
+    public String getExtractedText() { return extractedText; }
+    public String getPageContents() { return pageContents; }
     public DocumentProcessingStatus getProcessingStatus() { return processingStatus; }
     public String getFailureReason() { return failureReason; }
     public Long getCreatedById() { return createdBy.getId(); }

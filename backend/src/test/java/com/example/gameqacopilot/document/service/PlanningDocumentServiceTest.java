@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 
 import com.example.gameqacopilot.document.entity.DocumentProcessingStatus;
 import com.example.gameqacopilot.document.entity.PlanningDocument;
+import com.example.gameqacopilot.document.parser.PdfDocumentProcessor;
 import com.example.gameqacopilot.document.repository.PlanningDocumentRepository;
 import com.example.gameqacopilot.project.Project;
 import com.example.gameqacopilot.project.ProjectRepository;
@@ -31,7 +32,7 @@ class PlanningDocumentServiceTest {
         when(users.findById(2L)).thenReturn(Optional.of(mock(User.class)));
         var multipart = new MultipartProperties();
         multipart.setMaxFileSize(DataSize.ofBytes(5));
-        var service = new PlanningDocumentService(documents, projects, users, multipart, "build/test-documents");
+        var service = new PlanningDocumentService(documents, projects, users, multipart, mock(PdfDocumentProcessor.class), "build/test-documents");
         var file = new MockMultipartFile("file", "plan.pdf", "application/pdf", "%PDF-1.7".getBytes());
 
         assertThatThrownBy(() -> service.upload(1L, 2L, "Plan", file))
