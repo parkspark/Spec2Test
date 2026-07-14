@@ -10,6 +10,15 @@
 ---
 (이하 회차 기록)
 
+## [2026-07-14 14:01] T-03 Spring Security 로그인/로그아웃/me API + USER·QA 역할 분리 — BLOCKED
+- 구현 내용: BCrypt 비밀번호 검증과 HTTP 세션 기반 로그인·로그아웃·현재 사용자 조회 API를 구현했다.
+  USER는 조회 요청만 가능하고 QA만 변경 요청을 수행하도록 전역 Spring Security 권한 규칙과 401/403 처리를 적용했다.
+  별도 Vite 프론트엔드가 세션 쿠키를 사용할 수 있도록 개발용 전역 CORS에 credentials 허용을 추가했다.
+- 생성/수정 파일: backend/build.gradle, backend/src/main/java/com/example/gameqacopilot/common/security/, backend/src/main/java/com/example/gameqacopilot/user/, backend/src/test/java/com/example/gameqacopilot/user/AuthIntegrationTest.java, .gitignore
+- 테스트: `cd backend && ./gradlew test` 통과 (전체 10개, 인증·세션·로그아웃·USER 403·QA 허용 및 기존 회귀 테스트)
+- 차단 사유: 전체 테스트는 통과했으나 `git add -A`가 `.git/index.lock: Permission denied`로 실패했다. .git ACL의 명시적 쓰기 거부를 해제한 뒤 변경 전체를 `[T-03] Spring Security 인증 및 역할 분리` 메시지로 커밋해야 한다.
+- 다음 작업자를 위한 메모: 사용자 생성 API는 기획서 범위에 없어 구현하지 않았다. DB의 users.password에는 BCrypt 해시를 저장해야 한다. 필수 커밋 전에는 T-04를 시작하지 않는다.
+
 ## [2026-07-14 13:33] T-02 PostgreSQL 연결 + Flyway 설정 + V1 마이그레이션 — DONE
 - 구현 내용: PostgreSQL 연결과 JPA/Flyway 설정을 추가하고, User·Project 테이블 및 역할·소유자 제약조건을 V1 마이그레이션으로 구성했다.
   H2 PostgreSQL 호환 모드에서 마이그레이션 적용과 필수 제약조건을 검증하는 단위 테스트를 추가했다.

@@ -1,6 +1,7 @@
 # Backend (Gradle/Java)
 backend/build/
 backend/.gradle/
+.gradle-user-home/
 backend/bin/
 backend/out/
 *.class

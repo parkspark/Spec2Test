@@ -21,5 +21,6 @@ class CorsConfigTest {
         assertThat(configuration.getAllowedOrigins()).containsExactly("http://localhost:5173");
         assertThat(configuration.getAllowedMethods())
                 .containsExactlyElementsOf(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        assertThat(configuration.getAllowCredentials()).isTrue();
     }
 }
