@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: game-qa-copilot
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
