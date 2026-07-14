@@ -4,6 +4,7 @@ set -uo pipefail
 
 MAX_ITER="${1:-30}"
 FAIL_STREAK=0          # 연속 실패 서킷 브레이커
+REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 for i in $(seq 1 "$MAX_ITER"); do
   echo "===== Ralph Loop #$i / $MAX_ITER ====="
@@ -16,7 +17,8 @@ for i in $(seq 1 "$MAX_ITER"); do
 
   codex exec \
     --sandbox workspace-write \
-    --ask-for-approval never \
+    # 다른 루트에서 loop.sh 실행할 때 사용
+    -C "$REPO_DIR" \
     "$(cat PROMPT.md)"
   EXIT_CODE=$?
 
