@@ -8,6 +8,16 @@
 - [x] T-03 Spring Security 로그인/로그아웃/me API + USER·QA 역할 분리 (기획서 §16.1, §26 작업1)
 - [ ] T-04 프로젝트 생성(QA)·목록·상세 API + 권한 검증 403 (기획서 §16.2)
      → status는 생성 시 항상 ACTIVE로 고정 저장 (PROGRESS.md DECISION NEEDED 답변 참고)
+     → 재개 지침: AuthIntegrationTest.allowsOnlyQaToCallQaEndpoints 테스트 중
+        QA 사용자가 빈 JSON({})으로 요청 시 400을 기대하나 500이 발생함.
+        원인: ProjectCreateRequest의 @Valid 검증 실패(MethodArgumentNotValidException)가
+        400으로 매핑되지 않고 있음. 전역 예외 핸들러(@RestControllerAdvice)에
+        MethodArgumentNotValidException → 400 매핑 핸들러를 추가할 것.
+        기존 예외 핸들러 클래스가 있으면 거기에 메서드만 추가하고,
+        없으면 common.exception 패키지에 새로 생성할 것.
+        QA 역할 제한(403) 자체는 이미 정상 동작 중이므로 건드리지 말 것.
+        수정 후 ./gradlew test 전체 통과 확인할 것.
+        Gradle 환경 문제(한글 경로)는 이미 해결됨 (gradle.properties 참고).
 - [x] T-05 React 프로젝트 골격 (Vite+TS, 라우팅, axios, TanStack Query, 로그인 화면, 역할별 UI 분기)
 
 ## Phase 2. PDF 기획서 처리

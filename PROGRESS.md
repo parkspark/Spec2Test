@@ -14,6 +14,18 @@
 ---
 (이하 회차 기록)
 
+## [2026-07-14 16:16] 사람 개입 — T-04 재개 지침 작성
+- 원인: validation 실패 시 MethodArgumentNotValidException이 400이 아닌 500으로 처리됨
+- 결정: 전역 예외 핸들러에 해당 예외 → 400 매핑 추가하도록 지침 남김
+- QA 권한 체크(403)는 이미 정상 동작하므로 수정 범위는 예외 처리 부분으로 한정
+
+## [2026-07-14 15:06] T-04 프로젝트 생성·목록·상세 API + 권한 검증 403 — BLOCKED
+- 차단 사유: 백엔드 검증 환경 복구를 3회 시도했으나 Gradle 기본 캐시 잠금 권한 거부, 임시 캐시 네트워크 대기, 한글 경로에서 테스트 워커 클래스패스 손상 및 잠금 파일 복사 실패가 연속 발생함
+- 구현 내용: QA 프로젝트 생성, USER·QA 목록/상세 조회, 생성자 User 연결, 생성 상태 ACTIVE 고정, USER 생성 요청 403 처리를 구현했으나 커밋하지 않음
+- 생성/수정 파일: backend project 도메인 Entity·DTO·Repository·Service·Controller, GlobalExceptionHandler, ProjectIntegrationTest, AuthIntegrationTest, .gitignore
+- 테스트: compileJava 및 compileTestJava 통과; test 실행기는 GradleWorkerMain ClassNotFoundException으로 시작 실패
+- 다음 작업자를 위한 메모: 남아 있는 변경을 유지하고 기존 Gradle 데몬/잠금을 해제한 뒤 ASCII 경로의 GRADLE_USER_HOME에서 전체 테스트를 재실행할 것. 통과 전 BACKLOG 완료 처리 및 커밋 금지
+
 ## [2026-07-14 14:40] 사람 개입 — T-05 실제 완료 확인
 - vite.config.ts에 pool: 'threads' 적용 후 npm test -- --run 로컬 통과 확인 (Test Files 1 passed, Tests 2 passed)
 - T-05는 실제로 완료된 상태였음 (BLOCKED 라벨은 테스트 실행 환경 문제로 인한 것)
