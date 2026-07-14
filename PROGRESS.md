@@ -10,6 +10,12 @@
 ---
 (이하 회차 기록)
 
+## [2026-07-14 10:30] T-02 PostgreSQL 연결 + Flyway 설정 + V1 마이그레이션 — BLOCKED
+- 차단 사유: 선행 작업 T-01이 완료되지 않아 Spring Boot/Gradle 프로젝트 골격과 테스트 실행 환경이 없음
+- 확인 결과: `backend`에는 `.gitkeep`만 존재하며, T-02에서 골격까지 생성하면 한 회차에 T-01과 T-02를 함께 수행하게 됨
+- 검증: 구현을 시작하지 않아 백엔드 검증 생략
+- 다음 작업자가 볼 내용: 기준 문서가 현재 지정 경로에 존재하므로 T-01의 기존 DECISION NEEDED와 BLOCKED 상태를 사람이 정리한 뒤 T-01부터 완료할 것
+
 ## [2026-07-14 09:48] T-01 Spring Boot 프로젝트 골격 생성 — BLOCKED
 - 차단 사유: AGENTS.md가 지정한 유일한 기준 문서 경로에 파일이 없음
 - 확인 결과: `specs/game-qa-copilot-final-spec-v1.0.md`만 존재함
