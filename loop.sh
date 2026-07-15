@@ -21,10 +21,6 @@ for i in $(seq 1 "$MAX_ITER"); do
     break
   fi
 
-  # 실행 전 예방적 ACL 리셋 (지난 회차에 남은 DENY 제거)
-  MSYS_NO_PATHCONV=1 icacls .git /reset /T /C >/dev/null 2>&1 || true
-
-
   ATTEMPT=1
   EXIT_CODE=1
   while [ "$ATTEMPT" -le "$RETRY_MAX" ] && [ "$EXIT_CODE" -ne 0 ]; do
@@ -34,11 +30,9 @@ for i in $(seq 1 "$MAX_ITER"); do
     fi
 
     codex exec \
-      --sandbox workspace-write \
-      --dangerously-bypass-hook-trust \
+      --dangerously-bypass-approvals-and-sandbox \
+      -m gpt-5.6-sol \
       -c model_reasoning_effort="medium" \
-      -c approval_policy="never" \
-      -c sandbox_workspace_write.network_access=true \
       "$(cat PROMPT.md)"
     EXIT_CODE=$?
 
