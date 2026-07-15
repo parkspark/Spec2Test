@@ -42,6 +42,7 @@ export type DocumentPage = {
 export type TestCaseItem = {
   id: number
   analysisId: number
+  requirementId: number
   displayOrder: number
   majorCategory: string
   middleCategory: string
@@ -73,6 +74,24 @@ export type Evidence = {
 }
 
 type AnalysisJob = { planningDocumentId: number }
+
+export type Output = {
+  id: number
+  outputType: 'CSV_EXPORT' | 'MARKDOWN_EXPORT'
+  status: 'PENDING' | 'SUCCESS' | 'FAILED'
+  finalContent: string | null
+  fileName: string
+  failureReason: string | null
+}
+
+export type LoopLog = {
+  id: number
+  depthStep: number
+  generatedDraft: string
+  evaluationScore: number
+  evaluationFeedback: string
+  createdAt: string
+}
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL ?? 'http://localhost:8080',
@@ -415,6 +434,70 @@ export function TestCaseSheet({
   )
 }
 
+export function OutputDownload({
+  approvedCount,
+  requirementCount,
+  role,
+  outputs,
+  logs,
+  creatingType,
+  onCreate,
+  onDownload,
+}: {
+  approvedCount: number
+  requirementCount: number
+  role: User['role']
+  outputs: Partial<Record<Output['outputType'], Output>>
+  logs: Partial<Record<Output['outputType'], LoopLog[]>>
+  creatingType?: Output['outputType']
+  onCreate: (type: Output['outputType']) => void
+  onDownload: (output: Output) => void
+}) {
+  return (
+    <main className="output-shell">
+      <header><p className="eyebrow">OUTPUTS</p><h1>산출물 다운로드</h1></header>
+      <section className="output-summary">
+        <article className="card metric"><strong>{approvedCount}</strong><span>승인된 테스트 케이스</span></article>
+        <article className="card metric"><strong>{requirementCount}</strong><span>포함될 요구사항</span></article>
+      </section>
+
+      {(['CSV_EXPORT', 'MARKDOWN_EXPORT'] as const).map((type) => {
+        const output = outputs[type]
+        const outputLogs = logs[type] ?? []
+        const label = type === 'CSV_EXPORT' ? '테스트 케이스 CSV' : '모호 요구사항 Markdown'
+        const progress = output?.status === 'SUCCESS' ? 3 : Math.min(outputLogs.length, 3)
+        return (
+          <section className="card output-card" key={type}>
+            <div className="output-heading">
+              <div><h2>{label}</h2><p>상태: {output?.status ?? '생성 전'}</p></div>
+              <div className="review-actions">
+                {role === 'QA' && <Button disabled={creatingType !== undefined}
+                  onClick={() => onCreate(type)}>{creatingType === type ? '생성 중' : '생성'}</Button>}
+                <Button variant="outline" disabled={output?.status !== 'SUCCESS'}
+                  onClick={() => output && onDownload(output)}>{type === 'CSV_EXPORT' ? 'CSV 다운로드' : 'Markdown 다운로드'}</Button>
+              </div>
+            </div>
+            {output && <>
+              <label className="loop-progress">생성 진행 상태
+                <progress max={3} value={progress} />
+              </label>
+              {output.failureReason && <p className="error" role="alert">{output.failureReason}</p>}
+              <div className="loop-logs" aria-label={`${label} 생성 로그`}>
+                {outputLogs.map((log) => <article key={log.id}>
+                  <strong>{log.depthStep}회차 · {log.evaluationScore}점</strong>
+                  <span>{log.evaluationFeedback}</span>
+                </article>)}
+              </div>
+              <h3>문서 미리보기</h3>
+              <pre className="output-preview">{output.finalContent ?? '최종 문서가 아직 생성되지 않았습니다.'}</pre>
+            </>}
+          </section>
+        )
+      })}
+    </main>
+  )
+}
+
 function DocumentScreen() {
   const { documentId } = useParams()
   const id = Number(documentId)
@@ -512,6 +595,50 @@ function TestCaseScreen({ user }: { user: User }) {
     evidencePanel={evidencePanel} />
 }
 
+function OutputScreen({ user }: { user: User }) {
+  const { projectId } = useParams()
+  const id = Number(projectId)
+  const [outputs, setOutputs] = useState<Partial<Record<Output['outputType'], Output>>>({})
+  const [logs, setLogs] = useState<Partial<Record<Output['outputType'], LoopLog[]>>>({})
+  const [creatingType, setCreatingType] = useState<Output['outputType']>()
+  const listQuery = useQuery({
+    queryKey: ['projects', id, 'test-cases'],
+    queryFn: async () => (await api.get<ApiResponse<{ items: TestCaseItem[] }>>(`/api/projects/${id}/test-cases`)).data.data.items,
+    enabled: Number.isInteger(id),
+  })
+
+  const create = async (type: Output['outputType']) => {
+    setCreatingType(type)
+    try {
+      const path = type === 'CSV_EXPORT' ? 'csv' : 'markdown'
+      const output = (await api.post<ApiResponse<Output>>(`/api/projects/${id}/outputs/${path}`)).data.data
+      const outputLogs = (await api.get<ApiResponse<LoopLog[]>>(`/api/outputs/${output.id}/loop-logs`)).data.data
+      setOutputs((current) => ({ ...current, [type]: output }))
+      setLogs((current) => ({ ...current, [type]: outputLogs }))
+    } finally {
+      setCreatingType(undefined)
+    }
+  }
+
+  const download = async (output: Output) => {
+    const response = await api.get<Blob>(`/api/outputs/${output.id}/download`, { responseType: 'blob' })
+    const url = URL.createObjectURL(response.data)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = output.fileName
+    link.click()
+    URL.revokeObjectURL(url)
+  }
+
+  if (listQuery.isPending) return <main className="loading">산출물 정보 불러오는 중</main>
+  if (listQuery.isError) return <main className="loading">산출물 정보를 불러오지 못했습니다.</main>
+  const approved = listQuery.data.filter((item) => item.status === 'APPROVED')
+  return <OutputDownload approvedCount={approved.length}
+    requirementCount={new Set(approved.map((item) => item.requirementId)).size}
+    role={user.role} outputs={outputs} logs={logs} creatingType={creatingType}
+    onCreate={(type) => { void create(type) }} onDownload={(output) => { void download(output) }} />
+}
+
 function App() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -557,6 +684,10 @@ function App() {
       <Route
         path="/projects/:projectId/test-cases"
         element={userQuery.data ? <TestCaseScreen user={userQuery.data} /> : <Navigate to="/login" replace />}
+      />
+      <Route
+        path="/projects/:projectId/outputs"
+        element={userQuery.data ? <OutputScreen user={userQuery.data} /> : <Navigate to="/login" replace />}
       />
       <Route path="*" element={<Navigate to={userQuery.data ? '/projects' : '/login'} replace />} />
     </Routes>

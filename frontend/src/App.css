@@ -351,6 +351,73 @@
   margin-top: 20px;
 }
 
+.output-shell {
+  width: min(1000px, calc(100% - 40px));
+  display: grid;
+  gap: 20px;
+  margin: 0 auto;
+  padding: 40px 0;
+}
+
+.output-summary {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.metric,
+.output-card {
+  padding: 24px;
+}
+
+.metric {
+  display: grid;
+  gap: 6px;
+}
+
+.metric strong {
+  font-size: 32px;
+}
+
+.output-heading,
+.loop-progress,
+.loop-logs article {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.loop-progress {
+  margin: 20px 0;
+  font-weight: 700;
+}
+
+.loop-progress progress {
+  flex: 1;
+}
+
+.loop-logs {
+  display: grid;
+  gap: 8px;
+}
+
+.loop-logs article {
+  padding: 10px;
+  border-radius: 8px;
+  background: #f1f5f9;
+}
+
+.output-preview {
+  max-height: 360px;
+  overflow: auto;
+  padding: 16px;
+  border-radius: 8px;
+  background: #0f172a;
+  color: #e2e8f0;
+  white-space: pre-wrap;
+}
+
 @media (max-width: 560px) {
   .login-card {
     padding: 24px;
@@ -379,5 +446,16 @@
 
   .test-case-detail dl {
     grid-template-columns: 1fr;
+  }
+
+  .output-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .output-heading,
+  .loop-progress,
+  .loop-logs article {
+    align-items: flex-start;
+    flex-direction: column;
   }
 }

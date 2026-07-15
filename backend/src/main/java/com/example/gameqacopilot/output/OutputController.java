@@ -1,5 +1,7 @@
 package com.example.gameqacopilot.output;
 
+import com.example.gameqacopilot.analysis.loop.LatsLoopLogQueryService;
+import com.example.gameqacopilot.analysis.loop.LatsLoopLogResponse;
 import com.example.gameqacopilot.common.response.ApiResponse;
 import com.example.gameqacopilot.common.security.CurrentUser;
 import org.springframework.http.ContentDisposition;
@@ -11,13 +13,16 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
+import java.util.List;
 
 @RestController
 public class OutputController {
     private final CsvOutputService outputs;
+    private final LatsLoopLogQueryService loopLogs;
 
-    public OutputController(CsvOutputService outputs) {
+    public OutputController(CsvOutputService outputs, LatsLoopLogQueryService loopLogs) {
         this.outputs = outputs;
+        this.loopLogs = loopLogs;
     }
 
     @PostMapping("/api/projects/{projectId}/outputs/csv")
@@ -35,6 +40,11 @@ public class OutputController {
     @GetMapping("/api/outputs/{outputId}")
     ApiResponse<OutputResponse> findById(@PathVariable Long outputId) {
         return ApiResponse.of(outputs.findById(outputId));
+    }
+
+    @GetMapping("/api/outputs/{outputId}/loop-logs")
+    ApiResponse<List<LatsLoopLogResponse>> findLoopLogs(@PathVariable Long outputId) {
+        return ApiResponse.of(loopLogs.findByOutputId(outputId));
     }
 
     @GetMapping("/api/outputs/{outputId}/download")

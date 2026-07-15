@@ -45,4 +45,11 @@ public class LatsLoopLog {
         this.evaluationFeedback = feedback;
         this.createdAt = LocalDateTime.now();
     }
+
+    public Long getId() { return id; }
+    public int getDepthStep() { return depthStep; }
+    public String getGeneratedDraft() { return generatedDraft; }
+    public int getEvaluationScore() { return evaluationScore; }
+    public String getEvaluationFeedback() { return evaluationFeedback; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
 }

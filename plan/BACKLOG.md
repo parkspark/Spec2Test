@@ -55,7 +55,7 @@
 - [x] T-26 승인 테스트 케이스 CSV 생성·다운로드 (10컬럼, RFC4180, UTF-8 BOM — 기획서 §18.1, §16.9) → 재개 지침: 대상 기획서는 projectId 기준 READY 상태 중 최신 것 1개로 고정
         (PROGRESS.md DECISION NEEDED 답변 참고). READY 기획서 없으면 400 반환.
 - [x] T-27 모호 요구사항 Markdown 생성·다운로드 (기획서 §18.2) → 재개 지침: T-26과 동일한 기획서 선택 규칙 적용 (PROGRESS.md DECISION NEEDED 답변 참고).
-- [ ] T-28 프론트 산출물 화면 + Lats_Loop_Log 진행 상태 표시 (기획서 §17.10)
+- [x] T-28 프론트 산출물 화면 + Lats_Loop_Log 진행 상태 표시 (기획서 §17.10)
 
 ## Phase 7. Jira 연동
 - [x] T-29 JiraClient 인터페이스 + MockJiraClient(목업 게시) + Issue 미리보기 API (기획서 §19.2)

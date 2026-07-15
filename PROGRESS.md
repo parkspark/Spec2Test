@@ -20,6 +20,13 @@
 
 ---
 
+## [2026-07-15 14:24] T-28 프론트 산출물 화면 + Lats_Loop_Log 진행 상태 표시 — DONE
+- 구현 내용: 프로젝트 산출물 화면에 승인 테스트 케이스 수와 포함 요구사항 수, CSV·Markdown 생성/다운로드, 최종 문서 미리보기를 추가했다.
+  Output 상태와 회차별 Evaluator 점수·피드백을 표시하고, 명세의 Lats_Loop_Log 조회 API를 DTO 기반으로 구현했다.
+- 생성/수정 파일: frontend/src/App.tsx, frontend/src/App.css, frontend/src/App.test.tsx, LatsLoopLogQueryService.java, LatsLoopLogResponse.java, LatsLoopLog.java, LatsLoopLogRepository.java, OutputController.java, LatsLoopLogQueryServiceTest.java, plan/BACKLOG.md, PROGRESS.md
+- 테스트: `cd backend && ./gradlew test`, `cd frontend && npm run build && npm test -- --run` 통과 (Gradle BUILD SUCCESSFUL, Vitest 8개 통과)
+- 다음 작업자를 위한 메모: 다음 최상단 작업은 T-30 Jira Issue 생성 플로우다. 산출물 생성은 기존 동기 API를 사용하므로 완료 응답 뒤 저장된 루프 로그를 조회해 표시한다.
+
 ## [2026-07-15 14:17] T-27 모호 요구사항 Markdown 생성·다운로드 — DONE
 - 구현 내용: 프로젝트의 최신 READY 기획서를 선택하고 해당 문서의 모호 요구사항을 질문·영향·심각도·상태·관련 요구사항·Evidence와 함께 기획서 §18.2 형식의 Markdown으로 생성한다.
   생성 결과와 파일명·상태 및 Actor–Evaluator 검증 로그를 Output/Lats_Loop_Log에 기록하는 QA 생성 API를 추가하고, 기존 USER·QA 조회·다운로드 API에서 Markdown 미디어 타입을 지원한다.

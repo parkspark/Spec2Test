@@ -1,7 +1,7 @@
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
-import { DocumentViewer, EvidencePanel, LoginForm, ProjectHome, TestCaseSheet, type TestCaseItem } from './App'
+import { DocumentViewer, EvidencePanel, LoginForm, OutputDownload, ProjectHome, TestCaseSheet, type TestCaseItem } from './App'
 
 describe('role-based frontend skeleton', () => {
   it('validates the login form before submitting', async () => {
@@ -62,6 +62,7 @@ describe('role-based frontend skeleton', () => {
 const testCase: TestCaseItem = {
   id: 101,
   analysisId: 20,
+  requirementId: 30,
   displayOrder: 1,
   majorCategory: '무료 뽑기',
   middleCategory: '보상 지급',
@@ -136,5 +137,32 @@ describe('test case sheet', () => {
     expect(screen.getByLabelText('근거 영역 하이라이트')).toHaveStyle({ left: '10%', top: '20%' })
     await userEvent.click(screen.getByRole('button', { name: '근거 2 (p.6)' }))
     expect(onSelect).toHaveBeenCalledWith(1)
+  })
+})
+
+describe('output download', () => {
+  it('shows counts, preview, downloads, and loop progress while limiting creation to QA', async () => {
+    const onCreate = vi.fn()
+    const onDownload = vi.fn()
+    const output = { id: 9, outputType: 'CSV_EXPORT' as const, status: 'SUCCESS' as const,
+      finalContent: 'No,대분류\n1,무료 뽑기', fileName: 'approved.csv', failureReason: null }
+    const { container, rerender } = render(<OutputDownload approvedCount={2} requirementCount={1} role="QA"
+      outputs={{ CSV_EXPORT: output }} logs={{ CSV_EXPORT: [{ id: 1, depthStep: 1,
+        generatedDraft: 'draft', evaluationScore: 100, evaluationFeedback: '통과', createdAt: '2026-07-15' }] }}
+      onCreate={onCreate} onDownload={onDownload} />)
+
+    expect(within(container).getByText('2')).toBeInTheDocument()
+    expect(within(container).getByText('1')).toBeInTheDocument()
+    expect(within(container).getByText(/No,대분류/)).toBeInTheDocument()
+    expect(within(container).getByText('1회차 · 100점')).toBeInTheDocument()
+    await userEvent.click(within(container).getAllByRole('button', { name: '생성' })[0])
+    expect(onCreate).toHaveBeenCalledWith('CSV_EXPORT')
+    await userEvent.click(within(container).getByRole('button', { name: 'CSV 다운로드' }))
+    expect(onDownload).toHaveBeenCalledWith(output)
+
+    rerender(<OutputDownload approvedCount={2} requirementCount={1} role="USER"
+      outputs={{ CSV_EXPORT: output }} logs={{}} onCreate={onCreate} onDownload={onDownload} />)
+    expect(within(container).queryByRole('button', { name: '생성' })).not.toBeInTheDocument()
+    expect(within(container).getByRole('button', { name: 'CSV 다운로드' })).toBeEnabled()
   })
 })
