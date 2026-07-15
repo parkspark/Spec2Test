@@ -151,11 +151,13 @@ describe('project detail', () => {
     render(<ProjectDetail project={project}
       documents={[{ ...projectDocument, analysis: { id: 20, planningDocumentId: 4, status: 'COMPLETED',
         requestedAt: '2026-07-15T12:00:00', completedAt: '2026-07-15T12:01:00' } }]}
-      testCases={[testCase]} role="USER" onUpload={vi.fn()} onAnalyze={vi.fn()} onOpenDocument={vi.fn()} />)
+      testCases={[{ ...testCase, id: 100, analysisId: 19, testItem: '이전 실패 결과' }, testCase]} role="USER"
+      onUpload={vi.fn()} onAnalyze={vi.fn()} onOpenDocument={vi.fn()} />)
 
     expect(screen.getByRole('link', { name: '테스트 케이스 보기' })).toBeInTheDocument()
     expect(screen.getAllByRole('tab')).toHaveLength(4)
     expect(screen.getByText(/TC 1\. 무료 뽑기 정상 사용/)).toBeInTheDocument()
+    expect(screen.queryByText(/이전 실패 결과/)).not.toBeInTheDocument()
   })
 
   it('shows the stored analysis failure reason and allows retry', () => {

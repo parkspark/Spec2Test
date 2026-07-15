@@ -32,14 +32,12 @@
 
 ---
 
-## [2026-07-15 16:56] T-37 로컬 업로드→분석 E2E 검증 및 상태 폴링 보완 — BLOCKED
-- 구현 내용: 기획서 업로드 중 `UPLOADED → PROCESSING → READY`를 각각 DB에 저장하고, 프론트는 업로드 중 문서 상태를 1.5초, AI 분석 중 작업 상태를 3초 간격으로 폴링한다. 요청 실패 후에도 문서·분석·테스트 케이스 캐시를 갱신한다.
-- 생성/수정 파일: PlanningDocument.java, PlanningDocumentService.java, PlanningDocumentServiceTest.java, frontend/src/App.tsx, frontend/src/App.test.tsx, plan/BACKLOG.md, PROGRESS.md
-- 테스트: `cd frontend && npm run build && npm test -- --run` 통과 (13개), `cd backend && ./gradlew test --no-daemon --console=plain --rerun-tasks` 통과 (Gradle BUILD SUCCESSFUL)
-- 차단 사유: `AI_MODEL=gpt-4o` 재시도에서 TestCase 5건은 생성됐으나 모호성 연결 중 `TestCase.requirement` 지연 로딩으로 작업 2가 FAILED 처리됐다. JOIN FETCH 수정은 완료했으며 실행 중인 백엔드 재시작이 필요하다.
-- 재개 확인: `qa@test.com` QA 로그인, 프로젝트 1/문서 1 `READY`, 분석 작업 1 생성까지 실제 API로 확인했다. 분석은 실행 환경의 `AI_MODEL=GPT-5.2`에 대해 OpenAI가 `model_not_found`를 반환해 `FAILED`로 종료됐으며 TestCase는 0건이다. 유효한 모델 ID로 백엔드를 재시작한 뒤 재시도해야 한다.
-- 2차 확인: `gpt-4o`가 실제 응답의 modelName에 반영됐고 분석 작업 2에서 TestCase 5건이 GENERATED 상태로 조회됐다. 작업은 모호성 단계 지연 로딩 오류로 FAILED였으며, AI 호출을 트랜잭션에 포함하지 않고 해당 TestCase 조회에만 Requirement JOIN FETCH를 적용했다.
-- 다음 작업자를 위한 메모: 백엔드를 재시작한 뒤 문서 1 분석을 재요청해 COMPLETED와 최종 TestCase 목록을 확인하고 DONE 처리한다.
+## [2026-07-15 17:17] T-37 로컬 업로드→분석 E2E 검증 및 상태 폴링 보완 — DONE
+- 구현 내용: 기획서 상태 `UPLOADED → PROCESSING → READY`를 각각 저장하고 프론트는 업로드 중 1.5초, 분석 중 3초 폴링한다. 모호성 연결의 Requirement 지연 로딩은 JOIN FETCH로 수정했으며, 결과 탭은 실패 재시도 데이터를 제외하고 문서별 최신 분석 TestCase만 표시한다.
+- 실제 검증: QA 로그인 성공, 프로젝트 2에 PDF 업로드 POST 200, 문서 3 `PROCESSING → READY` 확인. 프로젝트 1 문서 1 분석 작업 5는 `gpt-4o`로 `COMPLETED`, 해당 분석의 GENERATED TestCase 5건 조회 성공.
+- 생성/수정 파일: PlanningDocument.java, PlanningDocumentService.java, TestCaseRepository.java, AmbiguityGenerationService.java, 관련 테스트, frontend/src/App.tsx, frontend/src/App.test.tsx, plan/BACKLOG.md, PROGRESS.md
+- 테스트: `cd frontend && npm run build && npm test -- --run` 통과 (14개), `cd backend && ./gradlew test` 통과 (Gradle BUILD SUCCESSFUL)
+- 다음 작업자를 위한 메모: 실제 업로드의 `UPLOADED`는 즉시 `PROCESSING`으로 전환되어 100ms 외부 폴링에는 잡히지 않았고, `PROCESSING → READY`는 확인됐다. DB 저장 순서는 단위 테스트로 3단계 모두 검증한다.
 
 ## [2026-07-15 16:44] T-36 프론트 프로젝트 상세·업로드·AI 분석 결과 화면 — DONE
 - 구현 내용: `/projects/:projectId`에서 프로젝트와 기획서 목록·처리 상태를 조회하고, 빈 목록은 역할별 안내/QA PDF 업로드 폼을 표시한다. READY 문서는 QA 분석 요청, 진행 상태 3초 폴링, 기존 결과 링크를 제공하며 §17.6의 4개 탭 중 테스트 케이스 간단 목록을 연결했다.

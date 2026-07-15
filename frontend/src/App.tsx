@@ -342,6 +342,8 @@ export function ProjectDetail({
 }) {
   const [activeTab, setActiveTab] = useState('테스트 케이스')
   const tabs = ['기능 요약', '요구사항', '테스트 케이스', '모호한 요구사항']
+  const latestAnalysisIds = new Set(documents.flatMap((document) => document.analysis ? [document.analysis.id] : []))
+  const visibleTestCases = testCases.filter((testCase) => latestAnalysisIds.has(testCase.analysisId))
   return <main className="page-shell project-detail-shell">
     <header><div><p className="eyebrow">PROJECT</p><h1>{project.name}</h1>
       <p>{project.gameGenre || '-'} · {project.platform || '-'}</p></div></header>
@@ -377,13 +379,13 @@ export function ProjectDetail({
       </section>
     )}
 
-    {testCases.length > 0 && <section id="analysis-results" className="card analysis-results">
+    {visibleTestCases.length > 0 && <section id="analysis-results" className="card analysis-results">
       <div className="analysis-tabs" role="tablist" aria-label="AI 분석 결과">
         {tabs.map((tab) => <button key={tab} role="tab" aria-selected={activeTab === tab}
           onClick={() => setActiveTab(tab)}>{tab}</button>)}
       </div>
       {activeTab === '테스트 케이스' ? <div className="simple-test-list">
-        {testCases.map((testCase) => <article key={testCase.id}>
+        {visibleTestCases.map((testCase) => <article key={testCase.id}>
           <strong>TC {testCase.displayOrder}. {testCase.testItem}</strong>
           <span>{testCase.majorCategory} / {testCase.middleCategory} / {testCase.minorCategory} · {testCase.status}</span>
         </article>)}
