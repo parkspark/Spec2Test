@@ -79,4 +79,11 @@ public class TestCase {
     public String getMajorCategory() { return majorCategory; }
     public TestCaseStatus getStatus() { return status; }
     public String getEvidences() { return evidences; }
+    public String getNotes() { return notes; }
+    public String getRequirementExternalId() { return requirement.getExternalRequirementId(); }
+    public void updateNotesForAmbiguity(String updatedNotes) {
+        this.notes = updatedNotes;
+        this.requiresHumanReview = true;
+        this.updatedAt = LocalDateTime.now();
+    }
 }

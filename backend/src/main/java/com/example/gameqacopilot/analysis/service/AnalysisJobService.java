@@ -80,6 +80,11 @@ public class AnalysisJobService {
     }
 
     @Transactional
+    public void recordAmbiguities(Long id, String rawResponse, Long tokenUsage) {
+        requireJob(id).recordAmbiguities(rawResponse, tokenUsage);
+    }
+
+    @Transactional
     public void fail(Long id, String reason) {
         requireJob(id).fail(reason);
     }
