@@ -20,6 +20,13 @@
 
 ---
 
+## [2026-07-15 14:11] T-26 승인 테스트 케이스 CSV 생성·다운로드 — DONE
+- 구현 내용: 프로젝트의 최신 READY 기획서를 선택하고 해당 문서의 APPROVED 테스트 케이스만 displayOrder 순서로 10컬럼 CSV에 출력한다.
+  RFC 4180 이스케이프와 UTF-8 BOM을 적용하고, 생성 결과·파일명·상태 및 Actor–Evaluator 검증 로그를 Output/Lats_Loop_Log에 기록하는 QA 생성 API와 USER·QA 조회·다운로드 API를 구현했다.
+- 생성/수정 파일: CsvGenerator.java, CsvOutputService.java, OutputController.java, OutputResponse.java, Output.java, PlanningDocumentRepository.java, TestCaseRepository.java, CsvGeneratorTest.java, CsvOutputServiceTest.java, plan/BACKLOG.md, PROGRESS.md
+- 테스트: `cd backend && ./gradlew test --no-daemon --console=plain` 전체 55개 통과 (Gradle BUILD SUCCESSFUL)
+- 다음 작업자를 위한 메모: 다음 작업은 T-27 모호 요구사항 Markdown 생성·다운로드다. 동일한 최신 READY 기획서 선택 규칙을 재사용하고, READY 문서가 없으면 Output을 만들지 않고 400을 반환한다.
+
 ## [2026-07-15 14:01] T-29 JiraClient 인터페이스 + 목업 게시 + Issue 미리보기 API — DONE
 - 구현 내용: Jira 호출을 JiraClient로 추상화하고 로컬 Key·URL을 반환하는 MockJiraClient를 추가했다.
   모호성의 질문·영향·Evidence·관련 요구사항을 기획서 §19.3 형식으로 조립하는 미리보기 API를 구현하고, 정확한 관련 요구사항 보존을 위해 JSONB 필드를 Flyway V8로 추가했다.
