@@ -26,6 +26,13 @@
 
 ---
 
+## [2026-07-15 14:40] T-32 통합 테스트: 업로드→분석→검토→CSV 전체 흐름 — DONE
+- 구현 내용: PDF 업로드부터 기능 분류·요구사항·테스트 케이스·모호성 생성, Evidence 페이지 조회, 개별 승인, CSV 생성·다운로드와 루프 로그까지 실제 HTTP 전 구간 통합 테스트를 추가했다.
+  기존 분석 요청에서 누락된 테스트 케이스·모호성 단계 연결과 AnalysisJob COMPLETED 전이를 최소 파이프라인 서비스로 보완했다.
+- 생성/수정 파일: AnalysisPipelineService.java, AnalysisJobController.java, AnalysisJob.java, AnalysisJobService.java, FullFlowIntegrationTest.java, AnalysisJobIntegrationTest.java, plan/BACKLOG.md, PROGRESS.md
+- 테스트: `cd backend && ./gradlew test --no-daemon --console=plain` 전체 62개 통과 (Gradle BUILD SUCCESSFUL)
+- 다음 작업자를 위한 메모: 다음 최상단 작업은 T-33 README 작성이다. T-31은 실제 Jira 인스턴스 확정 전 MVP 보류로 결정되어 MockJiraClient를 유지한다.
+
 ## [2026-07-15 14:29] T-30 Jira Issue 생성 플로우 — DONE
 - 구현 내용: QA의 명시적 POST 요청으로 OPEN 모호성을 Jira 목업에 게시하고, 성공 시 Issue Key·URL·요청/응답 데이터와 생성 사용자를 JIRA_ISSUE Output에 저장했다.
   성공한 모호성은 ISSUE_CREATED로 갱신하며 행 잠금으로 중복 생성을 차단하고, 실패는 FAILED Output으로 남기되 모호성을 OPEN으로 유지해 재시도할 수 있게 했다.

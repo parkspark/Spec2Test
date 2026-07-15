@@ -85,6 +85,11 @@ public class AnalysisJobService {
     }
 
     @Transactional
+    public void complete(Long id) {
+        requireJob(id).complete();
+    }
+
+    @Transactional
     public void fail(Long id, String reason) {
         requireJob(id).fail(reason);
     }

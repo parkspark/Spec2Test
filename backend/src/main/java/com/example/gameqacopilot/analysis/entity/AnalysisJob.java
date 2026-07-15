@@ -65,6 +65,11 @@ public class AnalysisJob {
         if (tokenUsage != null) this.tokenUsage = (this.tokenUsage == null ? 0 : this.tokenUsage) + tokenUsage;
     }
 
+    public void complete() {
+        this.status = AnalysisJobStatus.COMPLETED;
+        this.completedAt = LocalDateTime.now();
+    }
+
     public void fail(String reason) {
         this.status = AnalysisJobStatus.FAILED;
         this.failureReason = reason;

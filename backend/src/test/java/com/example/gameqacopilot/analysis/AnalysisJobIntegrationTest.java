@@ -10,7 +10,12 @@ import static org.mockito.Mockito.verify;
 import com.example.gameqacopilot.common.security.CurrentUser;
 import com.example.gameqacopilot.analysis.service.CategoryClassificationService;
 import com.example.gameqacopilot.analysis.dto.CategoryClassificationResponse;
+import com.example.gameqacopilot.analysis.dto.RequirementExtractionResponse;
+import com.example.gameqacopilot.analysis.dto.TestCaseGenerationResponse;
+import com.example.gameqacopilot.analysis.dto.AmbiguityGenerationResponse;
+import com.example.gameqacopilot.ambiguity.AmbiguityGenerationService;
 import com.example.gameqacopilot.requirement.RequirementExtractionService;
+import com.example.gameqacopilot.testcase.TestCaseGenerationService;
 import com.example.gameqacopilot.user.UserRole;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,6 +33,8 @@ class AnalysisJobIntegrationTest {
     @Autowired JdbcClient jdbcClient;
     @MockitoBean CategoryClassificationService classifications;
     @MockitoBean RequirementExtractionService requirements;
+    @MockitoBean TestCaseGenerationService testCases;
+    @MockitoBean AmbiguityGenerationService ambiguities;
     private CurrentUser qa;
     private CurrentUser regularUser;
     private Long documentId;
@@ -63,13 +70,24 @@ class AnalysisJobIntegrationTest {
         var classification = new CategoryClassificationResponse(java.util.List.of(), java.util.List.of());
         org.mockito.Mockito.when(classifications.classify(org.mockito.ArgumentMatchers.anyLong()))
                 .thenReturn(classification);
+        var requirement = new RequirementExtractionResponse(java.util.List.of());
+        var testCase = new TestCaseGenerationResponse(java.util.List.of());
+        org.mockito.Mockito.when(requirements.extract(org.mockito.ArgumentMatchers.anyLong(),
+                org.mockito.ArgumentMatchers.anyList())).thenReturn(requirement);
+        org.mockito.Mockito.when(testCases.generate(org.mockito.ArgumentMatchers.anyLong(),
+                org.mockito.ArgumentMatchers.anyList(), org.mockito.ArgumentMatchers.anyList())).thenReturn(testCase);
+        org.mockito.Mockito.when(ambiguities.generate(org.mockito.ArgumentMatchers.anyLong(),
+                org.mockito.ArgumentMatchers.anyList(), org.mockito.ArgumentMatchers.anyList()))
+                .thenReturn(new AmbiguityGenerationResponse(java.util.List.of()));
         mockMvc.perform(post("/api/documents/{documentId}/analyses", documentId).with(user(qa)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.status").value("PENDING"))
+                .andExpect(jsonPath("$.data.status").value("COMPLETED"))
                 .andExpect(jsonPath("$.data.planningDocumentId").value(documentId));
         Long analysisId = jdbcClient.sql("SELECT id FROM analysis_jobs").query(Long.class).single();
         verify(classifications).classify(analysisId);
         verify(requirements).extract(analysisId, classification.categoryTree());
+        verify(testCases).generate(analysisId, classification.categoryTree(), requirement.requirements());
+        verify(ambiguities).generate(analysisId, requirement.requirements(), testCase.testCases());
 
         mockMvc.perform(get("/api/analyses/{analysisId}", analysisId).with(user(regularUser)))
                 .andExpect(status().isOk())
