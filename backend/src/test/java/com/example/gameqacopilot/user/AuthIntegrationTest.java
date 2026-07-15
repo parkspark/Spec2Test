@@ -32,6 +32,7 @@ class AuthIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        jdbcClient.sql("DELETE FROM analysis_jobs").update();
         jdbcClient.sql("DELETE FROM planning_documents").update();
         jdbcClient.sql("DELETE FROM projects").update();
         jdbcClient.sql("DELETE FROM users").update();

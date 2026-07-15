@@ -10,6 +10,20 @@
 
 ---
 
+## [2026-07-15 09:00] T-10 AI 응답 DTO 및 JSON 스키마 전체 정의 — DONE
+- 구현 내용: 문서 요약·기능 분류·요구사항·10컬럼 테스트 케이스·모호성·Evidence를 하나의 AI 분석 응답 DTO로 정의했다.
+  기획서 Enum과 좌표 범위를 포함한 JSON Schema를 추가하고 정상 응답 역직렬화, 잘못된 JSON 및 미정의 Enum 거부를 검증했다.
+- 생성/수정 파일: AiAnalysisResponse.java, ai-analysis-response.schema.json, AiAnalysisResponseTest.java, ai-analysis-response.json, plan/BACKLOG.md, PROGRESS.md
+- 테스트: `cd backend && ./gradlew test` 전체 통과 (Gradle BUILD SUCCESSFUL)
+- 다음 작업자를 위한 메모: T-11 프롬프트에서 `/schemas/ai-analysis-response.schema.json` 구조와 동일한 필드명·Enum을 사용한다.
+
+## [2026-07-15 08:38] T-09 AnalysisJob 테이블 + 분석 요청/조회 API 골격 — DONE
+- 구현 내용: AnalysisJob과 상태 Enum을 V3 Flyway 마이그레이션 및 JPA 엔티티로 추가했다.
+  READY 문서의 QA 분석 요청은 PENDING 작업을 생성하고, USER·QA는 작업 단건 및 문서별 최신 작업을 DTO로 조회할 수 있다.
+- 생성/수정 파일: analysis 하위 controller/dto/entity/repository/service, V3__create_analysis_jobs.sql, AnalysisJob 단위·통합 테스트, 기존 통합 테스트 정리 순서
+- 테스트: `cd backend && ./gradlew test` 전체 통과 (Gradle BUILD SUCCESSFUL)
+- 다음 작업자를 위한 메모: T-10에서 AI 전체 응답 DTO와 JSON 스키마를 정의한다. modelName·promptVersion 및 실행 결과 필드는 실제 호출 단계 전까지 null이다.
+
 ## [2026-07-15 08:06] 사람 개입 — T-08 완료 확인
 - 원인: PlanningDocumentRepository.findAllByProjectIdOrderByCreatedAtDesc가 
   연관관계(Project) 경로를 못 찾아 ApplicationContext 생성 실패

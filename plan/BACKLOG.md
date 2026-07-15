@@ -26,8 +26,8 @@
 - [x] T-08 기획서 조회 API (문서/페이지 단위) + 프론트 PDF 미리보기 화면 (기획서 §16.3, §17.5)
 
 ## Phase 3. AI 분석
-- [ ] T-09 AnalysisJob 테이블 + 분석 요청/조회 API 골격 (기획서 §15.4, §16.4)
-- [ ] T-10 AI 응답 DTO 및 JSON 스키마 전체 정의 + 역직렬화 테스트 (CategoryTree, Requirement, TestCase 10컬럼, Ambiguity, Evidence — 기획서 §11, §26 작업5)
+- [x] T-09 AnalysisJob 테이블 + 분석 요청/조회 API 골격 (기획서 §15.4, §16.4)
+- [x] T-10 AI 응답 DTO 및 JSON 스키마 전체 정의 + 역직렬화 테스트 (CategoryTree, Requirement, TestCase 10컬럼, Ambiguity, Evidence — 기획서 §11, §26 작업5)
 - [ ] T-11 프롬프트 리소스 파일 작성 (시스템/분류/테스트케이스/모호성/Evidence/금지 규칙 — 기획서 §20)
 - [ ] T-12 Spring AI ChatClient 멀티모달 호출 + 기능 분류 추출 단계 구현 (기획서 §10.2)
 - [ ] T-13 요구사항 추출 단계 구현 + Requirement 저장 (기획서 §10.3, §15.5)
