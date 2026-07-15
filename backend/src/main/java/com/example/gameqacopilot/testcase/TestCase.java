@@ -80,6 +80,7 @@ public class TestCase {
     public TestCaseStatus getStatus() { return status; }
     public String getEvidences() { return evidences; }
     public String getNotes() { return notes; }
+    public Integer getDocumentPageCount() { return planningDocument.getPageCount(); }
     public String getRequirementExternalId() { return requirement.getExternalRequirementId(); }
     public void updateNotesForAmbiguity(String updatedNotes) {
         this.notes = updatedNotes;

@@ -36,8 +36,8 @@
 - [x] T-16 분석 결과 스키마/Enum/분류 일관성/중복 검증 + 실패 시 1회 재시도 (기획서 §10.6, §22.2)
 
 ## Phase 4. Evidence 추적
-- [ ] T-17 Evidence 원문 일치 검증 (EXACT/PARTIAL/SIMILAR/NOT_FOUND) + NOT_FOUND→UNSUPPORTED 처리 (기획서 §13)
-- [ ] T-18 Evidence 조회 API 3종 + 페이지 범위 검증 (기획서 §16.7, §13.2)
+- [ ] T-17 Evidence 원문 일치 검증 (EXACT/PARTIAL/SIMILAR/NOT_FOUND) + NOT_FOUND→UNSUPPORTED 처리 (기획서 §13) — BLOCKED: PARTIAL/SIMILAR 판정 기준(정규화·유사도 임계값·비교 범위) 결정 필요
+- [x] T-18 Evidence 조회 API 3종 + 페이지 범위 검증 (기획서 §16.7, §13.2)
 - [ ] T-19 비고 자동 생성 규칙 구현 (기획서 §20.8)
 
 ## Phase 5. 검토 화면 및 승인/반려

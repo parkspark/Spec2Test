@@ -59,4 +59,5 @@ public class Ambiguity {
     public String getSeverity() { return severity; }
     public AmbiguityStatus getStatus() { return status; }
     public String getEvidences() { return evidences; }
+    public Integer getDocumentPageCount() { return planningDocument.getPageCount(); }
 }

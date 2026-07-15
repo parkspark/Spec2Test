@@ -6,9 +6,18 @@
 
 ## DECISION NEEDED (사람 확인 대기)
 
-- 없음
+- T-17 Evidence 원문 일치 검증: PARTIAL과 SIMILAR를 구분할 텍스트 정규화 방식, 유사도 임계값, 비교 범위(해당 페이지/전체 문서)를 결정해야 한다.
+  기획서는 네 상태의 의미만 정의하고 판정 알고리즘은 정의하지 않아 임의 구현하지 않았다.
 
 ---
+
+## [2026-07-15 11:40] T-18 Evidence 조회 API 3종 + 페이지 범위 검증 — DONE
+- 구현 내용: 테스트 케이스·요구사항·모호성별 Evidence 조회 API 3종을 추가하고 저장된 Evidence JSON을 DTO로 반환한다.
+  페이지 번호가 있는 Evidence는 기획서 pageCount 범위를 검증하며, 범위를 벗어난 저장 데이터는 반환하지 않는다.
+- 생성/수정 파일: EvidenceController.java, EvidenceService.java, Requirement.java, TestCase.java, Ambiguity.java, EvidenceServiceTest.java, plan/BACKLOG.md, PROGRESS.md
+- 테스트: `cd backend && ./gradlew test --no-daemon --console=plain --no-problems-report` 전체 통과 (Gradle BUILD SUCCESSFUL)
+- 다음 작업자를 위한 메모: T-17은 PARTIAL/SIMILAR 판정 기준 결정 대기 상태다. 결정 후 원문 검증 결과를 저장 단계에 반영해야 한다.
+- 커밋 실패 — 사람이 수동 커밋 필요 (.git ACL 문제). 사람이 수동 커밋 처리함
 
 ## [2026-07-15 11:26] T-16 분석 결과 스키마/Enum/분류 일관성/중복 검증 + 실패 시 1회 재시도 — DONE
 - 구현 내용: 분류·요구사항·테스트 케이스·모호성 AI 응답에 공통 1회 재시도를 적용하고, 두 번째 실패 후에만 기존 AnalysisJob 실패 처리로 전달한다.
