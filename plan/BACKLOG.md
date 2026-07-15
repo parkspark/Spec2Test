@@ -36,7 +36,7 @@
 - [x] T-16 분석 결과 스키마/Enum/분류 일관성/중복 검증 + 실패 시 1회 재시도 (기획서 §10.6, §22.2)
 
 ## Phase 4. Evidence 추적
-- [ ] T-17 Evidence 원문 일치 검증 (EXACT/PARTIAL/SIMILAR/NOT_FOUND) + NOT_FOUND→UNSUPPORTED 처리 (기획서 §13) → 재개 지침: PROGRESS.md DECISION NEEDED 답변 참고.
+- [x] T-17 Evidence 원문 일치 검증 (EXACT/PARTIAL/SIMILAR/NOT_FOUND) + NOT_FOUND→UNSUPPORTED 처리 (기획서 §13) → 재개 지침: PROGRESS.md DECISION NEEDED 답변 참고.
         정규화(공백/줄바꿈 정리)→완전일치=EXACT→부분문자열포함=PARTIAL
         →Levenshtein 유사도>=0.7=SIMILAR→그외=NOT_FOUND(UNSUPPORTED 처리) 순서로 구현.
         비교 대상은 해당 페이지 텍스트로 한정.

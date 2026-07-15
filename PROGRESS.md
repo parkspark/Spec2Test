@@ -6,23 +6,16 @@
 
 ## DECISION NEEDED (사람 확인 대기)
 
-- T-17 Evidence 원문 일치 검증: PARTIAL과 SIMILAR를 구분할 텍스트 정규화 방식, 유사도 임계값, 비교 범위(해당 페이지/전체 문서)를 결정해야 한다.
-  기획서는 네 상태의 의미만 정의하고 판정 알고리즘은 정의하지 않아 임의 구현하지 않았다.
-  ## DECISION NEEDED (사람 확인 대기)
-- T-17 Evidence 원문 일치 검증
-  → 답변:
-    1. 정규화: 공백/줄바꿈 정리, 트리밍만 수행 (형태소 분석 등 고급 처리 없음)
-    2. 비교 범위: AI가 반환한 pageNumber에 해당하는 페이지 텍스트로 한정
-    3. 판정 순서 (위에서부터 순서대로 검사, 먼저 만족하는 조건 하나로 확정):
-       ① 정규화 후 완전 일치 → EXACT
-       ② 완전 일치는 아니지만 sourceText가 페이지 텍스트의 부분 문자열로 포함 → PARTIAL
-       ③ 부분 문자열로 포함되지 않지만 Levenshtein 기반 유사도(1 - 편집거리/max(길이)) >= 0.7 → SIMILAR
-       ④ 유사도 < 0.7 (①~③ 어디에도 해당하지 않음) → NOT_FOUND (→ UNSUPPORTED로 후처리)
-    4. 라이브러리: Java 표준 라이브러리 또는 최소 의존성(Apache Commons Text 등)으로 직접 구현.
-       임베딩/외부 API 기반 유사도는 사용하지 않음.
-    5. 임계값(0.7)은 잠정치이며 추후 데이터 기반 조정 가능함을 T-17 완료 기록에 남길 것.
 
 ---
+
+## [2026-07-15 12:09] T-17 Evidence 원문 일치 검증 — DONE
+- 구현 내용: 해당 페이지 텍스트의 공백·줄바꿈을 정규화하고 EXACT→PARTIAL→Levenshtein 유사도 0.7 이상 SIMILAR→NOT_FOUND 순서로 원문을 검증해 저장한다.
+  NOT_FOUND는 UNSUPPORTED로 전환하고, SIMILAR·NOT_FOUND 테스트 케이스는 requiresHumanReview=true로 저장하며 페이지 범위 밖 Evidence는 거부한다.
+- 생성/수정 파일: EvidenceVerifier.java, RequirementExtractionService.java, TestCaseGenerationService.java, AmbiguityGenerationService.java, TestCase.java, EvidenceVerifierTest.java, 관련 생성 서비스 테스트, plan/BACKLOG.md, PROGRESS.md
+- 테스트: cd backend && ./gradlew test --no-daemon --console=plain --no-problems-report 전체 41개 통과 (Gradle BUILD SUCCESSFUL)
+- 다음 작업자를 위한 메모: 유사도 임계값 0.7은 잠정치이며 추후 실제 데이터에 따라 조정할 수 있다. 다음 작업은 T-19 비고 자동 생성 규칙이다.
+- 커밋 실패 — 사람이 수동 커밋 필요 (.git ACL 문제). 사람이 수동 커밋 처리함
 
 ## [2026-07-15 11:40] T-18 Evidence 조회 API 3종 + 페이지 범위 검증 — DONE
 - 구현 내용: 테스트 케이스·요구사항·모호성별 Evidence 조회 API 3종을 추가하고 저장된 Evidence JSON을 DTO로 반환한다.

@@ -4,6 +4,7 @@ import com.example.gameqacopilot.analysis.dto.AiAnalysisResponse;
 import com.example.gameqacopilot.analysis.dto.AmbiguityGenerationResponse;
 import com.example.gameqacopilot.analysis.service.AnalysisJobService;
 import com.example.gameqacopilot.analysis.validator.AnalysisResultValidator;
+import com.example.gameqacopilot.evidence.EvidenceVerifier;
 import com.example.gameqacopilot.requirement.Requirement;
 import com.example.gameqacopilot.requirement.RequirementRepository;
 import com.example.gameqacopilot.testcase.TestCase;
@@ -33,6 +34,7 @@ public class AmbiguityGenerationService {
     private final ObjectMapper objectMapper;
     private final Resource systemPrompt;
     private final Resource ambiguityPrompt;
+    private final EvidenceVerifier evidenceVerifier;
 
     public AmbiguityGenerationService(AnalysisJobService jobs, RequirementRepository requirements,
             TestCaseRepository testCases, AmbiguityRepository ambiguities,
@@ -47,13 +49,15 @@ public class AmbiguityGenerationService {
         this.objectMapper = objectMapper;
         this.systemPrompt = systemPrompt;
         this.ambiguityPrompt = ambiguityPrompt;
+        this.evidenceVerifier = new EvidenceVerifier(objectMapper);
     }
 
     public AmbiguityGenerationResponse generate(Long jobId,
             List<AiAnalysisResponse.Requirement> requirementValues,
             List<AiAnalysisResponse.TestCase> testCaseValues) {
         try {
-            var job = jobs.prepareRequirements(jobId).job();
+            var input = jobs.prepareRequirements(jobId);
+            var job = input.job();
             var byExternalId = requirements.findAllByAnalysisJob_Id(jobId).stream()
                     .collect(Collectors.toMap(Requirement::getExternalRequirementId, Function.identity()));
             String request = request(requirementValues, testCaseValues);
@@ -62,7 +66,8 @@ public class AmbiguityGenerationService {
                             .responseEntity(AmbiguityGenerationResponse.class),
                     value -> validate(value.entity(), byExternalId));
             ambiguities.saveAll(response.entity().ambiguities().stream()
-                    .map(value -> new Ambiguity(job, value, json(value.evidences()))).toList());
+                    .map(value -> new Ambiguity(job, value, json(evidenceVerifier.verify(value.evidences(),
+                            input.document().pageContents(), input.document().pageCount())))).toList());
             linkTestCases(jobId, response.entity().ambiguities());
             var chatResponse = response.response();
             var usage = chatResponse.getMetadata().getUsage();

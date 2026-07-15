@@ -34,7 +34,7 @@ class TestCaseGenerationServiceTest {
         when(job.getPlanningDocument()).thenReturn(document);
         when(document.getProject()).thenReturn(mock(Project.class));
         when(jobs.prepareRequirements(5L)).thenReturn(
-                new AnalysisJobService.RequirementInput(job, mock(AnalysisJobService.AnalysisInput.class)));
+                new AnalysisJobService.RequirementInput(job, input()));
         var requirement = mock(Requirement.class);
         when(requirement.getExternalRequirementId()).thenReturn("REQ-001");
         when(requirement.getMajorCategory()).thenReturn("무료 뽑기");
@@ -57,6 +57,7 @@ class TestCaseGenerationServiceTest {
             var testCase = (TestCase) value;
             assertThat(testCase.getStatus()).isEqualTo(TestCaseStatus.GENERATED);
             assertThat(testCase.getEvidences()).contains("sourceText");
+            assertThat(testCase.isRequiresHumanReview()).isTrue();
         });
         verify(jobs).recordTestCases(eq(5L), anyString(), eq(0L));
     }
@@ -68,7 +69,7 @@ class TestCaseGenerationServiceTest {
         when(job.getPlanningDocument()).thenReturn(document);
         when(document.getProject()).thenReturn(mock(Project.class));
         when(jobs.prepareRequirements(5L)).thenReturn(
-                new AnalysisJobService.RequirementInput(job, mock(AnalysisJobService.AnalysisInput.class)));
+                new AnalysisJobService.RequirementInput(job, input()));
         var requirement = mock(Requirement.class);
         when(requirement.getExternalRequirementId()).thenReturn("REQ-001");
         when(requirement.getMajorCategory()).thenReturn("무료 뽑기");
@@ -100,6 +101,11 @@ class TestCaseGenerationServiceTest {
                 ChatClient.builder(chatModel), new ObjectMapper(),
                 new ByteArrayResource("system".getBytes()),
                 new ByteArrayResource("test case".getBytes()));
+    }
+
+    private AnalysisJobService.AnalysisInput input() {
+        return new AnalysisJobService.AnalysisInput("다른 정책",
+                "[{\"pageNumber\":1,\"elements\":[{\"text\":\"다른 정책\"}]}]", "unused", 1);
     }
 
     private AiAnalysisResponse.TestCase value() {

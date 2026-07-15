@@ -33,7 +33,7 @@ class RequirementExtractionServiceTest {
         Files.createFile(directory.resolve("page-1.png"));
         var job = mock(AnalysisJob.class);
         when(jobs.prepareRequirements(4L)).thenReturn(new AnalysisJobService.RequirementInput(job,
-                new AnalysisJobService.AnalysisInput("무료 뽑기", "[{\"pageNumber\":1}]", pdf.toString(), 1)));
+                new AnalysisJobService.AnalysisInput("무료 뽑기", pageContents("무료 뽑기"), pdf.toString(), 1)));
         String json = responseJson();
         when(chatModel.call(any(Prompt.class))).thenReturn(new ChatResponse(
                 List.of(new Generation(new AssistantMessage(json)))));
@@ -60,6 +60,10 @@ class RequirementExtractionServiceTest {
         return new RequirementExtractionService(jobs, requirements, ChatClient.builder(chatModel),
                 new ObjectMapper(), new ByteArrayResource("system".getBytes()),
                 new ByteArrayResource("requirement".getBytes()));
+    }
+
+    private String pageContents(String text) {
+        return "[{\"pageNumber\":1,\"elements\":[{\"text\":\"" + text + "\"}]}]";
     }
 
     private String responseJson() {

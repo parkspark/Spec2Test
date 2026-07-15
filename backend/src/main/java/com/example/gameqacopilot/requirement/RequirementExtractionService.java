@@ -4,6 +4,7 @@ import com.example.gameqacopilot.analysis.dto.AiAnalysisResponse;
 import com.example.gameqacopilot.analysis.dto.RequirementExtractionResponse;
 import com.example.gameqacopilot.analysis.service.AnalysisJobService;
 import com.example.gameqacopilot.analysis.validator.AnalysisResultValidator;
+import com.example.gameqacopilot.evidence.EvidenceVerifier;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.charset.StandardCharsets;
@@ -27,6 +28,7 @@ public class RequirementExtractionService {
     private final ObjectMapper objectMapper;
     private final Resource systemPrompt;
     private final Resource requirementPrompt;
+    private final EvidenceVerifier evidenceVerifier;
 
     public RequirementExtractionService(AnalysisJobService jobs, RequirementRepository requirements,
             ChatClient.Builder chatClientBuilder, ObjectMapper objectMapper,
@@ -38,6 +40,7 @@ public class RequirementExtractionService {
         this.objectMapper = objectMapper;
         this.systemPrompt = systemPrompt;
         this.requirementPrompt = requirementPrompt;
+        this.evidenceVerifier = new EvidenceVerifier(objectMapper);
     }
 
     public RequirementExtractionResponse extract(Long jobId, List<AiAnalysisResponse.CategoryTree> categoryTree) {
@@ -65,7 +68,8 @@ public class RequirementExtractionService {
                         .responseEntity(RequirementExtractionResponse.class),
                 value -> validate(value.entity(), categoryTree));
         requirements.saveAll(response.entity().requirements().stream()
-                .map(value -> toEntity(input.job(), value)).toList());
+                .map(value -> toEntity(input.job(), value, evidenceVerifier.verify(value.evidences(),
+                        input.document().pageContents(), input.document().pageCount()))).toList());
         var chatResponse = response.response();
         var usage = chatResponse.getMetadata().getUsage();
         jobs.recordRequirements(jobId, chatResponse.getResult().getOutput().getText(),
@@ -115,13 +119,13 @@ public class RequirementExtractionService {
     }
 
     private Requirement toEntity(com.example.gameqacopilot.analysis.entity.AnalysisJob job,
-            AiAnalysisResponse.Requirement value) {
+            AiAnalysisResponse.Requirement value, List<AiAnalysisResponse.Evidence> evidences) {
         try {
             return new Requirement(job, value.requirementId(), value.majorCategory(), value.middleCategory(),
                     value.minorCategory(), value.title(), value.description(), value.actor(),
                     objectMapper.writeValueAsString(value.preconditions()), value.trigger(),
                     objectMapper.writeValueAsString(value.expectedBehaviors()), "[]",
-                    objectMapper.writeValueAsString(value.evidences()));
+                    objectMapper.writeValueAsString(evidences));
         } catch (JsonProcessingException exception) {
             throw new IllegalArgumentException("Requirement JSON serialization failed", exception);
         }

@@ -49,7 +49,8 @@ public class TestCase {
     protected TestCase() {}
 
     public TestCase(AnalysisJob job, Requirement requirement, AiAnalysisResponse.TestCase value,
-            String preconditions, String testSteps, String expectedResults, String evidences, String notes) {
+            String preconditions, String testSteps, String expectedResults, String evidences, String notes,
+            boolean requiresHumanReview) {
         this.project = job.getPlanningDocument().getProject();
         this.planningDocument = job.getPlanningDocument();
         this.analysisJob = job;
@@ -69,7 +70,7 @@ public class TestCase {
         this.expectedResults = expectedResults;
         this.evidences = evidences;
         this.notes = notes;
-        this.requiresHumanReview = value.requiresHumanReview();
+        this.requiresHumanReview = requiresHumanReview;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = createdAt;
     }
@@ -80,6 +81,7 @@ public class TestCase {
     public TestCaseStatus getStatus() { return status; }
     public String getEvidences() { return evidences; }
     public String getNotes() { return notes; }
+    public boolean isRequiresHumanReview() { return requiresHumanReview; }
     public Integer getDocumentPageCount() { return planningDocument.getPageCount(); }
     public String getRequirementExternalId() { return requirement.getExternalRequirementId(); }
     public void updateNotesForAmbiguity(String updatedNotes) {

@@ -4,6 +4,7 @@ import com.example.gameqacopilot.analysis.dto.AiAnalysisResponse;
 import com.example.gameqacopilot.analysis.dto.TestCaseGenerationResponse;
 import com.example.gameqacopilot.analysis.service.AnalysisJobService;
 import com.example.gameqacopilot.analysis.validator.AnalysisResultValidator;
+import com.example.gameqacopilot.evidence.EvidenceVerifier;
 import com.example.gameqacopilot.requirement.Requirement;
 import com.example.gameqacopilot.requirement.RequirementRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -28,6 +29,7 @@ public class TestCaseGenerationService {
     private final ObjectMapper objectMapper;
     private final Resource systemPrompt;
     private final Resource testCasePrompt;
+    private final EvidenceVerifier evidenceVerifier;
 
     public TestCaseGenerationService(AnalysisJobService jobs, RequirementRepository requirements,
             TestCaseRepository testCases, ChatClient.Builder chatClientBuilder, ObjectMapper objectMapper,
@@ -40,13 +42,15 @@ public class TestCaseGenerationService {
         this.objectMapper = objectMapper;
         this.systemPrompt = systemPrompt;
         this.testCasePrompt = testCasePrompt;
+        this.evidenceVerifier = new EvidenceVerifier(objectMapper);
     }
 
     public TestCaseGenerationResponse generate(Long jobId,
             List<AiAnalysisResponse.CategoryTree> categoryTree,
             List<AiAnalysisResponse.Requirement> requirementValues) {
         try {
-            return generate(jobId, jobs.prepareRequirements(jobId).job(), categoryTree, requirementValues);
+            var input = jobs.prepareRequirements(jobId);
+            return generate(jobId, input, categoryTree, requirementValues);
         } catch (RuntimeException exception) {
             jobs.fail(jobId, exception.getMessage());
             throw exception;
@@ -54,10 +58,10 @@ public class TestCaseGenerationService {
     }
 
     private TestCaseGenerationResponse generate(Long jobId,
-            com.example.gameqacopilot.analysis.entity.AnalysisJob job,
+            AnalysisJobService.RequirementInput input,
             List<AiAnalysisResponse.CategoryTree> categories,
             List<AiAnalysisResponse.Requirement> requirementValues) {
-        return call(jobId, job, categories, request(categories, requirementValues));
+        return call(jobId, input, categories, request(categories, requirementValues));
     }
 
     private String request(List<AiAnalysisResponse.CategoryTree> categories,
@@ -72,7 +76,7 @@ public class TestCaseGenerationService {
     }
 
     private TestCaseGenerationResponse call(Long jobId,
-            com.example.gameqacopilot.analysis.entity.AnalysisJob job,
+            AnalysisJobService.RequirementInput input,
             List<AiAnalysisResponse.CategoryTree> categories, String request) {
         var byExternalId = requirements.findAllByAnalysisJob_Id(jobId).stream()
                 .collect(Collectors.toMap(Requirement::getExternalRequirementId, Function.identity()));
@@ -81,7 +85,9 @@ public class TestCaseGenerationService {
                         .responseEntity(TestCaseGenerationResponse.class),
                 value -> validate(value.entity(), categories, byExternalId));
         testCases.saveAll(response.entity().testCases().stream()
-                .map(value -> toEntity(job, byExternalId.get(value.requirementId()), value)).toList());
+                .map(value -> toEntity(input.job(), byExternalId.get(value.requirementId()), value,
+                        evidenceVerifier.verify(value.evidences(), input.document().pageContents(),
+                                input.document().pageCount()))).toList());
         var chatResponse = response.response();
         var usage = chatResponse.getMetadata().getUsage();
         jobs.recordTestCases(jobId, chatResponse.getResult().getOutput().getText(),
@@ -148,10 +154,12 @@ public class TestCaseGenerationService {
     }
 
     private TestCase toEntity(com.example.gameqacopilot.analysis.entity.AnalysisJob job,
-            Requirement requirement, AiAnalysisResponse.TestCase value) {
+            Requirement requirement, AiAnalysisResponse.TestCase value,
+            List<AiAnalysisResponse.Evidence> evidences) {
         return new TestCase(job, requirement, value,
                 json(value.preconditions()), json(value.testSteps()), json(value.expectedResults()),
-                json(value.evidences()), json(value.notes()));
+                json(evidences), json(value.notes()),
+                value.requiresHumanReview() || evidenceVerifier.requiresHumanReview(evidences));
     }
 
     private String json(Object value) {

@@ -35,7 +35,8 @@ class AmbiguityGenerationServiceTest {
         var job = mock(AnalysisJob.class);
         when(job.getPlanningDocument()).thenReturn(mock(PlanningDocument.class));
         when(jobs.prepareRequirements(6L)).thenReturn(
-                new AnalysisJobService.RequirementInput(job, mock(AnalysisJobService.AnalysisInput.class)));
+                new AnalysisJobService.RequirementInput(job, new AnalysisJobService.AnalysisInput("초기화",
+                        "[{\"pageNumber\":3,\"elements\":[{\"text\":\"초기화\"}]}]", "unused", 3)));
         var requirement = mock(Requirement.class);
         when(requirement.getExternalRequirementId()).thenReturn(\u0022REQ-001\u0022);
         when(requirement.getMajorCategory()).thenReturn(\u0022무료 뽑기\u0022);
