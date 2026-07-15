@@ -39,6 +39,22 @@ export type DocumentPage = {
   }>
 }
 
+export type TestCaseItem = {
+  id: number
+  displayOrder: number
+  majorCategory: string
+  middleCategory: string
+  minorCategory: string
+  testItem: string
+  status: string
+  preconditions: string[]
+  testSteps: Array<{ stepNumber: number; action: string; expectedResult?: string }>
+  expectedResults: string[]
+  evidenceSummary: null | { pageNumber: number | null; evidenceType: string; sourceText: string }
+  notes: string[]
+  requiresHumanReview: boolean
+}
+
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL ?? 'http://localhost:8080',
   withCredentials: true,
@@ -169,6 +185,104 @@ export function DocumentViewer({
   )
 }
 
+function TextList({ items }: { items: string[] }) {
+  if (items.length === 0) return <>-</>
+  return <ol>{items.map((item, index) => <li key={`${index}-${item}`}>{item}</li>)}</ol>
+}
+
+function NoteTags({ testCase }: { testCase: TestCaseItem }) {
+  const tags = [...testCase.notes]
+  if (testCase.evidenceSummary?.evidenceType === 'UNSUPPORTED' && !tags.some((tag) => tag.includes('근거 없음'))) {
+    tags.push('근거 없음')
+  }
+  if (testCase.requiresHumanReview && !tags.some((tag) => tag.includes('QA'))) tags.push('QA 검토 필수')
+  return tags.length ? <div className="note-tags">{tags.map((tag) => <span key={tag}>{tag}</span>)}</div> : <>-</>
+}
+
+function EvidenceSummary({ evidence }: { evidence: TestCaseItem['evidenceSummary'] }) {
+  return evidence ? (
+    <span className="evidence-summary">
+      p.{evidence.pageNumber ?? '-'} / {evidence.evidenceType}<br />“{evidence.sourceText}”
+    </span>
+  ) : <>근거 없음</>
+}
+
+export function TestCaseSheet({
+  items,
+  selected,
+  role,
+  onSelect,
+}: {
+  items: TestCaseItem[]
+  selected?: TestCaseItem
+  role: User['role']
+  onSelect: (id: number) => void
+}) {
+  return (
+    <main className="test-sheet-shell">
+      <header>
+        <p className="eyebrow">TEST CASE REVIEW</p>
+        <h1>테스트 시트</h1>
+      </header>
+
+      <section className="card table-scroll" aria-label="테스트 케이스 10컬럼 표">
+        <table className="test-case-table">
+          <thead><tr>
+            {['No', '대분류', '중분류', '소분류', '테스트 항목', '사전조건', '테스트 스텝', '기대결과', '기획서 원문 근거', '비고'].map((column) => <th key={column}>{column}</th>)}
+          </tr></thead>
+          <tbody>
+            {items.map((testCase) => (
+              <tr
+                key={testCase.id}
+                tabIndex={0}
+                aria-selected={selected?.id === testCase.id}
+                onClick={() => onSelect(testCase.id)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') onSelect(testCase.id)
+                }}
+              >
+                <td>{testCase.displayOrder}</td>
+                <td>{testCase.majorCategory}</td>
+                <td>{testCase.middleCategory}</td>
+                <td>{testCase.minorCategory}</td>
+                <td>{testCase.testItem}</td>
+                <td><TextList items={testCase.preconditions} /></td>
+                <td><TextList items={testCase.testSteps.map((step) => `${step.action}${step.expectedResult ? ` → ${step.expectedResult}` : ''}`)} /></td>
+                <td><TextList items={testCase.expectedResults} /></td>
+                <td><EvidenceSummary evidence={testCase.evidenceSummary} /></td>
+                <td><NoteTags testCase={testCase} /></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
+
+      <section className="card test-case-detail" aria-label="선택 테스트 케이스 상세">
+        {selected ? (
+          <>
+            <div className="detail-heading">
+              <div><p className="eyebrow">TC #{selected.displayOrder}</p><h2>{selected.testItem}</h2></div>
+              {role === 'QA' && <div className="review-actions">
+                <Button disabled title="T-23에서 승인 기능을 활성화합니다">승인</Button>
+                <Button disabled variant="outline" title="T-23에서 반려 기능을 활성화합니다">반려</Button>
+              </div>}
+            </div>
+            <dl>
+              <dt>분류</dt><dd>{selected.majorCategory} / {selected.middleCategory} / {selected.minorCategory}</dd>
+              <dt>사전조건</dt><dd><TextList items={selected.preconditions} /></dd>
+              <dt>테스트 스텝</dt><dd><TextList items={selected.testSteps.map((step) => `${step.action}${step.expectedResult ? ` → ${step.expectedResult}` : ''}`)} /></dd>
+              <dt>기대결과</dt><dd><TextList items={selected.expectedResults} /></dd>
+              <dt>원문 근거</dt><dd><EvidenceSummary evidence={selected.evidenceSummary} /></dd>
+              <dt>비고</dt><dd><NoteTags testCase={selected} /></dd>
+              <dt>상태</dt><dd>{selected.status}</dd>
+            </dl>
+          </>
+        ) : <p>행을 선택하면 전체 내용을 확인할 수 있습니다.</p>}
+      </section>
+    </main>
+  )
+}
+
 function DocumentScreen() {
   const { documentId } = useParams()
   const id = Number(documentId)
@@ -187,6 +301,26 @@ function DocumentScreen() {
   if (documentQuery.isPending || pageQuery.isPending) return <main className="loading">문서 불러오는 중</main>
   if (documentQuery.isError || pageQuery.isError) return <main className="loading">문서를 불러오지 못했습니다.</main>
   return <DocumentViewer document={documentQuery.data} page={pageQuery.data} onPageChange={setPageNumber} />
+}
+
+function TestCaseScreen({ user }: { user: User }) {
+  const { projectId } = useParams()
+  const id = Number(projectId)
+  const [selectedId, setSelectedId] = useState<number>()
+  const listQuery = useQuery({
+    queryKey: ['projects', id, 'test-cases'],
+    queryFn: async () => (await api.get<ApiResponse<{ items: TestCaseItem[] }>>(`/api/projects/${id}/test-cases`)).data.data.items,
+    enabled: Number.isInteger(id),
+  })
+  const detailQuery = useQuery({
+    queryKey: ['test-cases', selectedId],
+    queryFn: async () => (await api.get<ApiResponse<TestCaseItem>>(`/api/test-cases/${selectedId}`)).data.data,
+    enabled: selectedId !== undefined,
+  })
+
+  if (listQuery.isPending) return <main className="loading">테스트 케이스 불러오는 중</main>
+  if (listQuery.isError) return <main className="loading">테스트 케이스를 불러오지 못했습니다.</main>
+  return <TestCaseSheet items={listQuery.data} selected={detailQuery.data} role={user.role} onSelect={setSelectedId} />
 }
 
 function App() {
@@ -230,6 +364,10 @@ function App() {
       <Route
         path="/documents/:documentId"
         element={userQuery.data ? <DocumentScreen /> : <Navigate to="/login" replace />}
+      />
+      <Route
+        path="/projects/:projectId/test-cases"
+        element={userQuery.data ? <TestCaseScreen user={userQuery.data} /> : <Navigate to="/login" replace />}
       />
       <Route path="*" element={<Navigate to={userQuery.data ? '/projects' : '/login'} replace />} />
     </Routes>

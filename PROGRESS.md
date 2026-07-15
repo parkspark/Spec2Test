@@ -9,6 +9,13 @@
 
 ---
 
+## [2026-07-15 13:34] T-21 프론트 테스트 시트 화면 — DONE
+- 구현 내용: 프로젝트별 테스트 케이스 API를 연결한 검토 경로를 추가하고 고정 순서 10컬럼 표, 셀 줄바꿈, 가로 스크롤 및 컬럼 너비 조절을 구현했다.
+  행 선택 시 상세 API 결과를 패널에 표시하며 Evidence 요약과 비고 태그, QA 전용 승인·반려 버튼을 제공한다.
+- 생성/수정 파일: frontend/src/App.tsx, frontend/src/App.css, frontend/src/App.test.tsx, plan/BACKLOG.md, PROGRESS.md
+- 테스트: `cd frontend && npm run build && npm test -- --run` 통과 (Test Files 1 passed, Tests 5 passed)
+- 다음 작업자를 위한 메모: 다음 작업은 T-22 Evidence PDF 연동이다. 승인·반려 버튼은 T-23 API·모달 구현 전까지 가짜 동작을 피하도록 비활성 상태다.
+
 ## [2026-07-15 13:29] T-20 테스트 케이스 목록·상세 API — DONE
 - 구현 내용: 프로젝트별 테스트 케이스 목록과 개별 상세 조회 API를 추가하고 analysisId·상태·대/중/소분류·테스트 유형·신뢰도·키워드 필터 및 displayOrder 정렬을 구현했다.
   JSONB의 사전조건·스텝·기대결과·Evidence·비고를 DTO로 반환하며, 목록에는 첫 Evidence 요약을, 상세에는 전체 Evidence 배열을 포함한다.

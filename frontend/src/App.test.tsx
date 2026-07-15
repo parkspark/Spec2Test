@@ -1,7 +1,7 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
-import { DocumentViewer, LoginForm, ProjectHome } from './App'
+import { DocumentViewer, LoginForm, ProjectHome, TestCaseSheet, type TestCaseItem } from './App'
 
 describe('role-based frontend skeleton', () => {
   it('validates the login form before submitting', async () => {
@@ -56,5 +56,43 @@ describe('role-based frontend skeleton', () => {
     expect(screen.getByText('하루 한 번 무료 뽑기를 제공한다.')).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: '2 페이지' }))
     expect(onPageChange).toHaveBeenCalledWith(2)
+  })
+})
+
+const testCase: TestCaseItem = {
+  id: 101,
+  displayOrder: 1,
+  majorCategory: '무료 뽑기',
+  middleCategory: '보상 지급',
+  minorCategory: '일일 무료 횟수',
+  testItem: '무료 뽑기 정상 사용',
+  status: 'GENERATED',
+  preconditions: ['로그인되어 있다.'],
+  testSteps: [{ stepNumber: 1, action: '무료 뽑기 버튼을 선택한다.', expectedResult: '보상이 지급된다.' }],
+  expectedResults: ['무료 횟수가 0으로 변경된다.'],
+  evidenceSummary: { pageNumber: 7, evidenceType: 'INFERRED', sourceText: '무료 뽑기는 매일 초기화된다.' },
+  notes: ['AI 추론 포함', '기획 확인 필요'],
+  requiresHumanReview: true,
+}
+
+describe('test case sheet', () => {
+  it('renders ten columns, evidence summary, and note tags', () => {
+    render(<TestCaseSheet items={[testCase]} role="USER" onSelect={vi.fn()} />)
+
+    expect(screen.getAllByRole('columnheader')).toHaveLength(10)
+    expect(screen.getByText(/p\.7 \/ INFERRED/)).toBeInTheDocument()
+    expect(screen.getByText('AI 추론 포함')).toBeInTheDocument()
+    expect(screen.getByText('QA 검토 필수')).toBeInTheDocument()
+  })
+
+  it('selects a row and shows the complete detail with QA actions', async () => {
+    const onSelect = vi.fn()
+    const { container } = render(<TestCaseSheet items={[testCase]} selected={testCase} role="QA" onSelect={onSelect} />)
+
+    await userEvent.click(container.querySelector('tbody tr')!)
+    expect(onSelect).toHaveBeenCalledWith(101)
+    expect(within(container).getByRole('region', { name: '선택 테스트 케이스 상세' })).toHaveTextContent('무료 횟수가 0으로 변경된다.')
+    expect(within(container).getByRole('button', { name: '승인' })).toBeDisabled()
+    expect(within(container).getByRole('button', { name: '반려' })).toBeDisabled()
   })
 })
