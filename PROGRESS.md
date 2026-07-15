@@ -9,6 +9,13 @@
 
 ---
 
+## [2026-07-15 13:52] T-25 Actor–Evaluator 루프 프레임워크 — DONE
+- 구현 내용: 호출자가 지정한 통과 점수로 Actor 초안을 Evaluator가 평가하고, 피드백을 반영해 최대 3회 재생성하는 루프를 구현했다.
+  모든 완료 회차를 Lats_Loop_Log에 저장하며 통과 시 Output을 SUCCESS로, 3회 미통과 시 실패 사유와 함께 FAILED로 전환한다. AI 콜백 실행과 DB 트랜잭션은 분리했다.
+- 생성/수정 파일: ActorEvaluatorLoop.java, Evaluation.java, LoopPersistenceService.java, LatsLoopLog.java, Output.java 및 저장소·Enum, ActorEvaluatorLoopTest.java, plan/BACKLOG.md, PROGRESS.md
+- 테스트: `cd backend && ./gradlew test` 전체 50개 통과 (Gradle BUILD SUCCESSFUL)
+- 다음 작업자를 위한 메모: T-26에서 CSV Output을 PENDING으로 생성한 뒤 ActorEvaluatorLoop에 CSV 초안 생성기와 평가기를 연결한다. 통과 점수는 명세에 고정값이 없어 호출자가 명시한다.
+
 ## [2026-07-15 13:48] T-24 Output + Lats_Loop_Log 테이블 마이그레이션 — DONE
 - 구현 내용: Output 최종 상태·파일·외부 연동·요청/응답 데이터를 통합 저장하는 outputs 테이블과 Actor–Evaluator 회차별 초안·점수·피드백을 저장하는 lats_loop_logs 테이블을 V7 Flyway 마이그레이션으로 추가했다.
   산출물 유형·상태·외부 서비스 CHECK 제약과 프로젝트·문서·모호성·사용자·부모 Output FK를 적용했다.
