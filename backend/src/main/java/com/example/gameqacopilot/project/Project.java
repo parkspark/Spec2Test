@@ -57,7 +57,7 @@ public class Project {
         return owner;
     }
 
-    String getName() {
+    public String getName() {
         return name;
     }
 

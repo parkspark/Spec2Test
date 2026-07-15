@@ -20,6 +20,13 @@
 
 ---
 
+## [2026-07-15 14:17] T-27 모호 요구사항 Markdown 생성·다운로드 — DONE
+- 구현 내용: 프로젝트의 최신 READY 기획서를 선택하고 해당 문서의 모호 요구사항을 질문·영향·심각도·상태·관련 요구사항·Evidence와 함께 기획서 §18.2 형식의 Markdown으로 생성한다.
+  생성 결과와 파일명·상태 및 Actor–Evaluator 검증 로그를 Output/Lats_Loop_Log에 기록하는 QA 생성 API를 추가하고, 기존 USER·QA 조회·다운로드 API에서 Markdown 미디어 타입을 지원한다.
+- 생성/수정 파일: MarkdownGenerator.java, CsvOutputService.java, OutputController.java, Output.java, AmbiguityRepository.java, RequirementRepository.java, MarkdownGeneratorTest.java, CsvOutputServiceTest.java, plan/BACKLOG.md, PROGRESS.md
+- 테스트: `cd backend && ./gradlew test` 전체 57개 통과 (Gradle BUILD SUCCESSFUL)
+- 다음 작업자를 위한 메모: T-26/T-27 선행 API가 모두 완료되어 T-28 BLOCKED 표기를 해제했다. 프론트 산출물 화면과 Lats_Loop_Log 진행 상태 표시를 구현하면 된다.
+
 ## [2026-07-15 14:11] T-26 승인 테스트 케이스 CSV 생성·다운로드 — DONE
 - 구현 내용: 프로젝트의 최신 READY 기획서를 선택하고 해당 문서의 APPROVED 테스트 케이스만 displayOrder 순서로 10컬럼 CSV에 출력한다.
   RFC 4180 이스케이프와 UTF-8 BOM을 적용하고, 생성 결과·파일명·상태 및 Actor–Evaluator 검증 로그를 Output/Lats_Loop_Log에 기록하는 QA 생성 API와 USER·QA 조회·다운로드 API를 구현했다.

@@ -26,6 +26,12 @@ public class OutputController {
         return ApiResponse.of(outputs.create(projectId, user.id()));
     }
 
+    @PostMapping("/api/projects/{projectId}/outputs/markdown")
+    ApiResponse<OutputResponse> createMarkdown(
+            @PathVariable Long projectId, @AuthenticationPrincipal CurrentUser user) {
+        return ApiResponse.of(outputs.createMarkdown(projectId, user.id()));
+    }
+
     @GetMapping("/api/outputs/{outputId}")
     ApiResponse<OutputResponse> findById(@PathVariable Long outputId) {
         return ApiResponse.of(outputs.findById(outputId));
@@ -35,7 +41,7 @@ public class OutputController {
     ResponseEntity<byte[]> download(@PathVariable Long outputId) {
         var download = outputs.download(outputId);
         return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType("text/csv;charset=UTF-8"))
+                .contentType(MediaType.parseMediaType(download.mediaType()))
                 .header(HttpHeaders.CONTENT_DISPOSITION,
                         ContentDisposition.attachment().filename(download.fileName()).build().toString())
                 .body(download.content());

@@ -58,11 +58,11 @@ public class Output {
 
     protected Output() {}
 
-    public Output(Project project, PlanningDocument planningDocument, User createdBy, String fileName) {
+    public Output(Project project, PlanningDocument planningDocument, User createdBy, String outputType, String fileName) {
         this.project = project;
         this.planningDocument = planningDocument;
         this.createdBy = createdBy;
-        this.outputType = "CSV_EXPORT";
+        this.outputType = outputType;
         this.status = OutputStatus.PENDING;
         this.fileName = fileName;
         this.externalService = "NONE";
