@@ -6,6 +6,12 @@
 
 ## DECISION NEEDED (사람 확인 대기)
 
+- T-31 실제 Jira REST API 연동은 대상 Jira가 Cloud인지 Data Center인지, 인증 방식과 API 버전, 프로젝트 키·Issue Type, 실연동/목업 구현체 선택 및 ADF 실패 시 폴백 활성화 기준이 기획서에 정의되지 않았다. 운영 대상과 설정 계약을 결정해야 한다.
+→ 답변: 기획서 §26 작업17 및 §3.2 보류 범위 기준에 따라, T-31은 이번 MVP 사이클에서
+    구현하지 않는다. T-29에서 만든 JiraClient 인터페이스 + MockJiraClient(목업 게시)로
+    Jira 연동 요구사항(§19)을 충족한 것으로 간주한다.
+    실제 Jira 연동이 필요해지면, 실제 Jira 인스턴스(Cloud/DC 여부)가 확정된 시점에
+    별도 스펙으로 재정의하여 진행한다.
 - T-26 CSV 생성 API는 `projectId`만 받지만 `Output.planning_document_id`는 NOT NULL 단일 FK다. 프로젝트에 여러 기획서의 승인 테스트 케이스가 있을 때 (1) 분석/기획서 ID를 요청에 추가할지, (2) 기획서별 Output을 여러 개 만들지, (3) 특정 기획서 선택 규칙을 둘지 결정이 필요하다.
 - T-27 Markdown 생성 API도 `projectId`만 받고 §18.2 본문은 기획서명을 단수로 표시하며 `Output.planning_document_id`는 NOT NULL 단일 FK다. 여러 기획서가 있을 때 Markdown 대상 범위와 Output 기록 기준 결정이 필요하다.
 → 답변: 별도 ID를 요청에 추가하지 않는다. 해당 프로젝트의 PlanningDocument 중

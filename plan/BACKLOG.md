@@ -60,8 +60,8 @@
 ## Phase 7. Jira 연동
 - [x] T-29 JiraClient 인터페이스 + MockJiraClient(목업 게시) + Issue 미리보기 API (기획서 §19.2)
 - [x] T-30 Jira Issue 생성 플로우: 중복 방지, Output 기록, Ambiguity 상태 갱신, 실패 재시도 (기획서 §19)
-- [ ] T-31 (선택/잔여 일정) 실제 Jira REST API 연동 구현체 교체
-
+- [x] T-31 (선택/잔여 일정) 실제 Jira REST API 연동 구현체 교체 → MVP 범위에서 보류 결정 (PROGRESS.md DECISION NEEDED 답변 참고).
+        MockJiraClient로 §19 요구사항 충족 완료.
 ## 마무리
 - [ ] T-32 통합 테스트: 업로드→분석→검토→CSV 전체 흐름 (기획서 §23.2)
 - [ ] T-33 README 작성 (실행 방법, 환경 변수, 구현/보류 범위 — 기획서 §29)
