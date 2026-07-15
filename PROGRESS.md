@@ -26,6 +26,13 @@
 
 ---
 
+## [2026-07-15 14:43] T-33 README 작성 — DONE
+- 구현 내용: 기존 초기 설계 문서를 현재 구현과 설정에 맞는 프로젝트 README로 교체했다.
+  Backend·Frontend 실행 및 검증 방법, 환경 변수, MVP 구현 범위와 보류·제외 범위를 명확히 기록했다.
+- 생성/수정 파일: readme.md, plan/BACKLOG.md, PROGRESS.md
+- 테스트: `cd backend && ./gradlew test`, `cd frontend && npm run build && npm test -- --run` 통과 (Gradle BUILD SUCCESSFUL, Vitest 8개 통과)
+- 다음 작업자를 위한 메모: 백로그의 모든 MVP 작업이 완료됐다. 실제 Jira REST API 연동은 대상 인스턴스와 인증 계약 확정 전까지 MockJiraClient를 유지한다.
+
 ## [2026-07-15 14:40] T-32 통합 테스트: 업로드→분석→검토→CSV 전체 흐름 — DONE
 - 구현 내용: PDF 업로드부터 기능 분류·요구사항·테스트 케이스·모호성 생성, Evidence 페이지 조회, 개별 승인, CSV 생성·다운로드와 루프 로그까지 실제 HTTP 전 구간 통합 테스트를 추가했다.
   기존 분석 요청에서 누락된 테스트 케이스·모호성 단계 연결과 AnalysisJob COMPLETED 전이를 최소 파이프라인 서비스로 보완했다.
