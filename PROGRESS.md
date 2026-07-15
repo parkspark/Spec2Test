@@ -9,6 +9,13 @@
 
 ---
 
+## [2026-07-15 13:43] T-23 개별 승인/반려 API + 확인 모달 + 반려 사유 필수 입력 — DONE
+- 구현 내용: QA 전용 개별 승인·반려 API와 GENERATED 상태에서만 가능한 단방향 상태 전이를 구현하고 검토자·검토 시각·반려 사유를 기존 TestCase 필드에 저장한다.
+  프론트에 승인 확인 모달과 필수 반려 사유 입력 모달을 연결했으며 USER에게는 승인·반려 동작을 노출하지 않는다.
+- 생성/수정 파일: TestCase.java, TestCaseController.java, TestCaseReviewService.java, TestCaseRejectRequest.java, TestCaseResponse.java, App.tsx, App.css, TestCaseReviewServiceTest.java, App.test.tsx, plan/BACKLOG.md, PROGRESS.md
+- 테스트: `cd backend && ./gradlew test --rerun-tasks --no-daemon --console=plain`, `cd frontend && npm run build && npm test -- --run` 통과 (Gradle BUILD SUCCESSFUL, Vitest 7개 통과)
+- 다음 작업자를 위한 메모: 다음 작업은 T-24 Output + Lats_Loop_Log 테이블 마이그레이션이다. 승인·반려 후 상태 되돌리기와 bulk API는 명세상 구현하지 않았다.
+
 ## [2026-07-15 13:38] T-22 프론트 Evidence 연동 — DONE
 - 구현 내용: 테스트 케이스의 전체 Evidence를 조회하고 분석 작업에 연결된 PDF 문서의 해당 페이지로 이동하는 원문 패널을 구현했다.
   여러 근거 선택, 페이지·섹션·유형·검증 상태·원문·선정 이유 표시를 제공하며 boundingBox가 있는 근거만 이미지 위에 하이라이트한다.

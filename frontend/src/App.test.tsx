@@ -88,13 +88,30 @@ describe('test case sheet', () => {
 
   it('selects a row and shows the complete detail with QA actions', async () => {
     const onSelect = vi.fn()
-    const { container } = render(<TestCaseSheet items={[testCase]} selected={testCase} role="QA" onSelect={onSelect} />)
+    const onApprove = vi.fn().mockResolvedValue(undefined)
+    const onReject = vi.fn().mockResolvedValue(undefined)
+    const { container } = render(<TestCaseSheet items={[testCase]} selected={testCase} role="QA"
+      onSelect={onSelect} onApprove={onApprove} onReject={onReject} />)
 
     await userEvent.click(container.querySelector('tbody tr')!)
     expect(onSelect).toHaveBeenCalledWith(101)
     expect(within(container).getByRole('region', { name: '선택 테스트 케이스 상세' })).toHaveTextContent('무료 횟수가 0으로 변경된다.')
-    expect(within(container).getByRole('button', { name: '승인' })).toBeDisabled()
-    expect(within(container).getByRole('button', { name: '반려' })).toBeDisabled()
+    await userEvent.click(within(container).getByRole('button', { name: '승인' }))
+    expect(screen.getByRole('dialog', { name: '테스트 케이스 승인' })).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: '승인 확인' }))
+    expect(onApprove).toHaveBeenCalledWith(101)
+
+    await userEvent.click(within(container).getByRole('button', { name: '반려' }))
+    expect(screen.getByRole('button', { name: '반려 확인' })).toBeDisabled()
+    await userEvent.type(screen.getByRole('textbox', { name: '반려 사유 (필수)' }), '근거 부족')
+    await userEvent.click(screen.getByRole('button', { name: '반려 확인' }))
+    expect(onReject).toHaveBeenCalledWith(101, '근거 부족')
+  })
+
+  it('does not expose review actions to USER', () => {
+    const { container } = render(<TestCaseSheet items={[testCase]} selected={testCase} role="USER" onSelect={vi.fn()} />)
+    expect(within(container).queryByRole('button', { name: '승인' })).not.toBeInTheDocument()
+    expect(within(container).queryByRole('button', { name: '반려' })).not.toBeInTheDocument()
   })
 
 

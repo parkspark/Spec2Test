@@ -48,7 +48,7 @@ public class TestCaseQueryService {
                 .orElseThrow(() -> new NoSuchElementException("Test case not found")));
     }
 
-    private TestCaseResponse response(TestCase testCase) {
+    TestCaseResponse response(TestCase testCase) {
         List<String> preconditions = read(testCase.getPreconditions(), new TypeReference<>() {});
         List<AiAnalysisResponse.TestStep> steps = read(testCase.getTestSteps(), new TypeReference<>() {});
         List<String> expectedResults = read(testCase.getExpectedResults(), new TypeReference<>() {});
@@ -61,7 +61,8 @@ public class TestCaseQueryService {
                 testCase.getTestType(), testCase.getPriority(), testCase.getConfidence(), testCase.getStatus(),
                 preconditions, steps, expectedResults,
                 TestCaseResponse.EvidenceSummary.from(evidences.stream().findFirst().orElse(null)),
-                evidences, notes, testCase.isRequiresHumanReview());
+                evidences, notes, testCase.isRequiresHumanReview(), testCase.getReviewedById(),
+                testCase.getReviewedAt(), testCase.getRejectionReason());
     }
 
     private <T> T read(String json, TypeReference<T> type) {

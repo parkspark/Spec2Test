@@ -1,6 +1,7 @@
 package com.example.gameqacopilot.testcase;
 
 import com.example.gameqacopilot.analysis.dto.AiAnalysisResponse;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public record TestCaseResponse(
@@ -23,7 +24,10 @@ public record TestCaseResponse(
         EvidenceSummary evidenceSummary,
         List<AiAnalysisResponse.Evidence> evidences,
         List<String> notes,
-        boolean requiresHumanReview) {
+        boolean requiresHumanReview,
+        Long reviewedBy,
+        LocalDateTime reviewedAt,
+        String rejectionReason) {
 
     public record EvidenceSummary(
             Integer pageNumber,

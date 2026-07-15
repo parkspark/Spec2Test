@@ -94,8 +94,26 @@ public class TestCase {
     public String getEvidences() { return evidences; }
     public String getNotes() { return notes; }
     public boolean isRequiresHumanReview() { return requiresHumanReview; }
+    public Long getReviewedById() { return reviewedBy == null ? null : reviewedBy.getId(); }
+    public LocalDateTime getReviewedAt() { return reviewedAt; }
+    public String getRejectionReason() { return rejectionReason; }
     public Integer getDocumentPageCount() { return planningDocument.getPageCount(); }
     public String getRequirementExternalId() { return requirement.getExternalRequirementId(); }
+    public void approve(User reviewer) {
+        review(TestCaseStatus.APPROVED, reviewer, null);
+    }
+    public void reject(User reviewer, String reason) {
+        if (reason == null || reason.isBlank()) throw new IllegalArgumentException("Rejection reason is required");
+        review(TestCaseStatus.REJECTED, reviewer, reason.trim());
+    }
+    private void review(TestCaseStatus reviewedStatus, User reviewer, String reason) {
+        if (status != TestCaseStatus.GENERATED) throw new IllegalArgumentException("Test case is already reviewed");
+        status = reviewedStatus;
+        reviewedBy = reviewer;
+        reviewedAt = LocalDateTime.now();
+        rejectionReason = reason;
+        updatedAt = reviewedAt;
+    }
     public void updateNotesForAmbiguity(String updatedNotes) {
         this.notes = updatedNotes;
         this.requiresHumanReview = true;

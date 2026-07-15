@@ -55,6 +55,9 @@ export type TestCaseItem = {
   evidences?: Evidence[]
   notes: string[]
   requiresHumanReview: boolean
+  reviewedBy?: number | null
+  reviewedAt?: string | null
+  rejectionReason?: string | null
 }
 
 export type Evidence = {
@@ -285,14 +288,39 @@ export function TestCaseSheet({
   selected,
   role,
   onSelect,
+  onApprove,
+  onReject,
   evidencePanel,
 }: {
   items: TestCaseItem[]
   selected?: TestCaseItem
   role: User['role']
   onSelect: (id: number) => void
+  onApprove?: (id: number) => Promise<void>
+  onReject?: (id: number, reason: string) => Promise<void>
   evidencePanel?: ReactNode
 }) {
+  const [reviewAction, setReviewAction] = useState<'approve' | 'reject'>()
+  const [rejectionReason, setRejectionReason] = useState('')
+  const [reviewError, setReviewError] = useState('')
+
+  const closeReview = () => {
+    setReviewAction(undefined)
+    setRejectionReason('')
+    setReviewError('')
+  }
+
+  const submitReview = async () => {
+    if (!selected) return
+    try {
+      if (reviewAction === 'approve') await onApprove?.(selected.id)
+      if (reviewAction === 'reject') await onReject?.(selected.id, rejectionReason.trim())
+      closeReview()
+    } catch {
+      setReviewError('승인/반려 처리에 실패했습니다.')
+    }
+  }
+
   return (
     <main className="test-sheet-shell">
       <header>
@@ -339,8 +367,10 @@ export function TestCaseSheet({
             <div className="detail-heading">
               <div><p className="eyebrow">TC #{selected.displayOrder}</p><h2>{selected.testItem}</h2></div>
               {role === 'QA' && <div className="review-actions">
-                <Button disabled title="T-23에서 승인 기능을 활성화합니다">승인</Button>
-                <Button disabled variant="outline" title="T-23에서 반려 기능을 활성화합니다">반려</Button>
+                <Button disabled={selected.status !== 'GENERATED' || !onApprove}
+                  onClick={() => setReviewAction('approve')}>승인</Button>
+                <Button disabled={selected.status !== 'GENERATED' || !onReject} variant="outline"
+                  onClick={() => setReviewAction('reject')}>반려</Button>
               </div>}
             </div>
             <dl>
@@ -351,12 +381,36 @@ export function TestCaseSheet({
               <dt>원문 근거</dt><dd><EvidenceSummary evidence={selected.evidenceSummary} /></dd>
               <dt>비고</dt><dd><NoteTags testCase={selected} /></dd>
               <dt>상태</dt><dd>{selected.status}</dd>
+              {selected.reviewedAt && <><dt>검토 정보</dt><dd>사용자 #{selected.reviewedBy} · {new Date(selected.reviewedAt).toLocaleString()}</dd></>}
+              {selected.rejectionReason && <><dt>반려 사유</dt><dd>{selected.rejectionReason}</dd></>}
             </dl>
           </>
         ) : <p>행을 선택하면 전체 내용을 확인할 수 있습니다.</p>}
       </section>
       {evidencePanel}
       </div>
+      {reviewAction && selected && (
+        <div className="review-modal-backdrop">
+          <section className="card review-modal" role="dialog" aria-modal="true"
+            aria-labelledby="review-modal-title">
+            <h2 id="review-modal-title">{reviewAction === 'approve' ? '테스트 케이스 승인' : '테스트 케이스 반려'}</h2>
+            <p>“{selected.testItem}”을(를) {reviewAction === 'approve' ? '승인하시겠습니까?' : '반려하시겠습니까?'}</p>
+            {reviewAction === 'reject' && (
+              <label>반려 사유 (필수)
+                <textarea autoFocus required value={rejectionReason}
+                  onChange={(event) => setRejectionReason(event.target.value)} />
+              </label>
+            )}
+            {reviewError && <p className="error" role="alert">{reviewError}</p>}
+            <div className="review-actions">
+              <Button variant="outline" onClick={closeReview}>취소</Button>
+              <Button autoFocus={reviewAction === 'approve'}
+                disabled={reviewAction === 'reject' && rejectionReason.trim() === ''}
+                onClick={submitReview}>{reviewAction === 'approve' ? '승인 확인' : '반려 확인'}</Button>
+            </div>
+          </section>
+        </div>
+      )}
     </main>
   )
 }
@@ -386,6 +440,7 @@ function TestCaseScreen({ user }: { user: User }) {
   const id = Number(projectId)
   const [selectedId, setSelectedId] = useState<number>()
   const [evidenceIndex, setEvidenceIndex] = useState(0)
+  const queryClient = useQueryClient()
   const listQuery = useQuery({
     queryKey: ['projects', id, 'test-cases'],
     queryFn: async () => (await api.get<ApiResponse<{ items: TestCaseItem[] }>>(`/api/projects/${id}/test-cases`)).data.data.items,
@@ -419,6 +474,20 @@ function TestCaseScreen({ user }: { user: User }) {
     )).data.data,
     enabled: analysisQuery.data !== undefined && selectedEvidence !== undefined,
   })
+  const reviewMutation = useMutation({
+    mutationFn: async ({ testCaseId, action, reason }: {
+      testCaseId: number
+      action: 'approve' | 'reject'
+      reason?: string
+    }) => (await api.post<ApiResponse<TestCaseItem>>(
+      `/api/test-cases/${testCaseId}/${action}`,
+      action === 'reject' ? { reason } : undefined,
+    )).data.data,
+    onSuccess: (reviewed) => {
+      queryClient.setQueryData(['test-cases', reviewed.id], reviewed)
+      void queryClient.invalidateQueries({ queryKey: ['projects', id, 'test-cases'] })
+    },
+  })
 
   if (listQuery.isPending) return <main className="loading">테스트 케이스 불러오는 중</main>
   if (listQuery.isError) return <main className="loading">테스트 케이스를 불러오지 못했습니다.</main>
@@ -437,7 +506,10 @@ function TestCaseScreen({ user }: { user: User }) {
   }
 
   return <TestCaseSheet items={listQuery.data} selected={detailQuery.data} role={user.role}
-    onSelect={(testCaseId) => { setEvidenceIndex(0); setSelectedId(testCaseId) }} evidencePanel={evidencePanel} />
+    onSelect={(testCaseId) => { setEvidenceIndex(0); setSelectedId(testCaseId) }}
+    onApprove={(testCaseId) => reviewMutation.mutateAsync({ testCaseId, action: 'approve' }).then(() => undefined)}
+    onReject={(testCaseId, reason) => reviewMutation.mutateAsync({ testCaseId, action: 'reject', reason }).then(() => undefined)}
+    evidencePanel={evidencePanel} />
 }
 
 function App() {
