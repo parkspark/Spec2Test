@@ -9,6 +9,13 @@
 
 ---
 
+## [2026-07-15 13:29] T-20 테스트 케이스 목록·상세 API — DONE
+- 구현 내용: 프로젝트별 테스트 케이스 목록과 개별 상세 조회 API를 추가하고 analysisId·상태·대/중/소분류·테스트 유형·신뢰도·키워드 필터 및 displayOrder 정렬을 구현했다.
+  JSONB의 사전조건·스텝·기대결과·Evidence·비고를 DTO로 반환하며, 목록에는 첫 Evidence 요약을, 상세에는 전체 Evidence 배열을 포함한다.
+- 생성/수정 파일: TestCaseController.java, TestCaseQueryService.java, TestCaseResponse.java, TestCaseListResponse.java, TestCase.java, TestCaseRepository.java, TestCaseQueryServiceTest.java, plan/BACKLOG.md, PROGRESS.md
+- 테스트: `cd backend && ./gradlew test --no-daemon --console=plain --no-problems-report` 전체 45개 통과 (Gradle BUILD SUCCESSFUL)
+- 다음 작업자를 위한 메모: 다음 작업은 T-21 프론트 테스트 시트 화면이다. 키워드 필터는 테스트 항목(testItem)의 대소문자 무시 부분 일치이며, 승인·반려 API는 T-23 범위라 이번 작업에서 추가하지 않았다.
+
 ## [2026-07-15 12:19] T-19 비고 자동 생성 규칙 구현 — DONE
 - 구현 내용: 검증된 Evidence의 INFERRED·UNSUPPORTED 유형과 SIMILAR·NOT_FOUND 원문 검증 상태에 따라 기획서 §20.8 비고를 자동 생성한다.
   AI가 생성한 기존 비고와 기대결과 정책 미정 표시는 보존하고, 동일 비고는 중복 저장하지 않으며 관련 모호성 비고는 기존 연동 흐름을 유지한다.

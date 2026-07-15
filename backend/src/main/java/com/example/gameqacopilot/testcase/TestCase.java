@@ -76,9 +76,21 @@ public class TestCase {
     }
 
     public String getExternalTestCaseId() { return externalTestCaseId; }
+    public Long getId() { return id; }
+    public Long getAnalysisJobId() { return analysisJob.getId(); }
+    public Long getRequirementId() { return requirement.getId(); }
     public int getDisplayOrder() { return displayOrder; }
     public String getMajorCategory() { return majorCategory; }
+    public String getMiddleCategory() { return middleCategory; }
+    public String getMinorCategory() { return minorCategory; }
+    public String getTestItem() { return testItem; }
+    public AiAnalysisResponse.TestType getTestType() { return testType; }
+    public String getPriority() { return priority; }
+    public AiAnalysisResponse.Confidence getConfidence() { return confidence; }
     public TestCaseStatus getStatus() { return status; }
+    public String getPreconditions() { return preconditions; }
+    public String getTestSteps() { return testSteps; }
+    public String getExpectedResults() { return expectedResults; }
     public String getEvidences() { return evidences; }
     public String getNotes() { return notes; }
     public boolean isRequiresHumanReview() { return requiresHumanReview; }
