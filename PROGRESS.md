@@ -7,6 +7,10 @@
 ## DECISION NEEDED (사람 확인 대기)
 
 - 기획서 §17.2는 프로젝트 목록에 `미확인 모호성 수` 표시를 요구하지만, 현재 백엔드에는 §16.8의 `GET /api/projects/{projectId}/ambiguities`가 구현되어 있지 않고 `GET /api/projects` 응답에도 집계 필드가 없다. 목록 API를 구현할지 프로젝트 응답에 집계값을 추가할지 결정이 필요하다. 결정 전까지 프론트에는 해당 값만 `—`로 표시한다.
+→ 답변: 지금 단계에서는 별도 집계 API를 만들지 않는다. 핵심 흐름(업로드→분석→테스트
+    케이스 검토) 완성을 우선하고, 이 지표는 프론트에 `—`로 표시된 상태를 유지한다.
+    §16.8 Ambiguity 조회 API 및 목록 집계는 모호한 요구사항 화면(§17.9) 작업 시
+    함께 처리하는 것으로 미룬다.
 
 - T-31 실제 Jira REST API 연동은 대상 Jira가 Cloud인지 Data Center인지, 인증 방식과 API 버전, 프로젝트 키·Issue Type, 실연동/목업 구현체 선택 및 ADF 실패 시 폴백 활성화 기준이 기획서에 정의되지 않았다. 운영 대상과 설정 계약을 결정해야 한다.
 → 답변: 기획서 §26 작업17 및 §3.2 보류 범위 기준에 따라, T-31은 이번 MVP 사이클에서
@@ -27,6 +31,13 @@
     보류 범위로 남긴다.
 
 ---
+
+## [2026-07-15 16:56] T-37 로컬 업로드→분석 E2E 검증 및 상태 폴링 보완 — BLOCKED
+- 구현 내용: 기획서 업로드 중 `UPLOADED → PROCESSING → READY`를 각각 DB에 저장하고, 프론트는 업로드 중 문서 상태를 1.5초, AI 분석 중 작업 상태를 3초 간격으로 폴링한다. 요청 실패 후에도 문서·분석·테스트 케이스 캐시를 갱신한다.
+- 생성/수정 파일: PlanningDocument.java, PlanningDocumentService.java, PlanningDocumentServiceTest.java, frontend/src/App.tsx, frontend/src/App.test.tsx, plan/BACKLOG.md, PROGRESS.md
+- 테스트: `cd frontend && npm run build && npm test -- --run` 통과 (13개), `cd backend && ./gradlew test --no-daemon --console=plain --rerun-tasks` 통과 (Gradle BUILD SUCCESSFUL)
+- 차단 사유: 8080/5173 리슨과 프론트 `/projects/1` 200은 확인했으나, 실행 중인 백엔드는 사용자 터미널의 원격 DB/OpenAI 환경을 사용한다. 현재 셸에는 해당 환경 변수와 유효한 QA 로그인 정보가 없고 `qa@example.com/password`는 401이어서 실제 세션 E2E를 계속할 수 없다. 변경 클래스 반영을 위해 사용자 환경을 유지한 백엔드 재시작도 필요하다.
+- 다음 작업자를 위한 메모: 백엔드를 재시작하고 유효한 QA 이메일/비밀번호를 받은 뒤, 테스트 산출물 PDF로 업로드·문서 목록 상태·분석 POST·최종 TestCase 목록을 curl 세션으로 확인하고 DONE 처리한다.
 
 ## [2026-07-15 16:44] T-36 프론트 프로젝트 상세·업로드·AI 분석 결과 화면 — DONE
 - 구현 내용: `/projects/:projectId`에서 프로젝트와 기획서 목록·처리 상태를 조회하고, 빈 목록은 역할별 안내/QA PDF 업로드 폼을 표시한다. READY 문서는 QA 분석 요청, 진행 상태 3초 폴링, 기존 결과 링크를 제공하며 §17.6의 4개 탭 중 테스트 케이스 간단 목록을 연결했다.

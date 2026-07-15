@@ -49,6 +49,10 @@ public class PlanningDocument {
         this.processingStatus = DocumentProcessingStatus.UPLOADED;
         this.updatedAt = LocalDateTime.now();
     }
+    public void processing() {
+        this.processingStatus = DocumentProcessingStatus.PROCESSING;
+        this.updatedAt = LocalDateTime.now();
+    }
     public void processed(String extractedText, String pageContents) {
         this.extractedText = extractedText;
         this.pageContents = pageContents;

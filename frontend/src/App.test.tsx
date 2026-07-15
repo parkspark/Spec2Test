@@ -135,11 +135,16 @@ describe('project detail', () => {
 
   it('allows QA to request analysis for a ready document', async () => {
     const onAnalyze = vi.fn()
-    render(<ProjectDetail project={project} documents={[projectDocument]} testCases={[]} role="QA"
+    const { rerender } = render(<ProjectDetail project={project} documents={[projectDocument]} testCases={[]} role="QA"
       onUpload={vi.fn()} onAnalyze={onAnalyze} onOpenDocument={vi.fn()} />)
 
     await userEvent.click(screen.getByRole('button', { name: 'AI 분석 요청' }))
     expect(onAnalyze).toHaveBeenCalledWith(4)
+
+    rerender(<ProjectDetail project={project} documents={[projectDocument]} testCases={[]} role="QA"
+      analyzingDocumentId={4} onUpload={vi.fn()} onAnalyze={onAnalyze} onOpenDocument={vi.fn()} />)
+    expect(screen.getByRole('button', { name: 'AI 분석 진행 중' })).toBeDisabled()
+    expect(screen.getByText('분석 결과를 확인하는 중입니다.')).toBeInTheDocument()
   })
 
   it('shows analysis tabs and a simple test case list when results exist', () => {

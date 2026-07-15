@@ -924,6 +924,8 @@ function ProjectDetailScreen({ user }: { user: User }) {
   const id = Number(projectId)
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const [uploadPolling, setUploadPolling] = useState(false)
+  const [analyzingDocumentId, setAnalyzingDocumentId] = useState<number>()
   const project = useQuery({
     queryKey: ['projects', id],
     queryFn: async () => (await api.get<ApiResponse<ProjectApiItem>>(`/api/projects/${id}`)).data.data,
@@ -933,6 +935,9 @@ function ProjectDetailScreen({ user }: { user: User }) {
     queryKey: ['projects', id, 'documents'],
     queryFn: async () => (await api.get<ApiResponse<PlanningDocument[]>>(`/api/projects/${id}/documents`)).data.data,
     enabled: Number.isInteger(id),
+    refetchInterval: (query: { state: { data?: PlanningDocument[] } }) =>
+      uploadPolling || query.state.data?.some((document) => ['UPLOADED', 'PROCESSING'].includes(document.processingStatus))
+        ? 1500 : false,
   })
   const testCases = useQuery({
     queryKey: ['projects', id, 'test-cases'],
@@ -951,7 +956,7 @@ function ProjectDetailScreen({ user }: { user: User }) {
     },
     retry: false,
     refetchInterval: (query: { state: { data?: AnalysisJob | null } }) =>
-      ['PENDING', 'PROCESSING'].includes(query.state.data?.status ?? '') ? 3000 : false,
+      analyzingDocumentId === document.id || ['PENDING', 'PROCESSING'].includes(query.state.data?.status ?? '') ? 3000 : false,
   })) })
   const refresh = async () => {
     await Promise.all([
@@ -962,6 +967,7 @@ function ProjectDetailScreen({ user }: { user: User }) {
     ])
   }
   const upload = useMutation({
+    onMutate: () => setUploadPolling(true),
     mutationFn: async (values: UploadValues) => {
       const form = new FormData()
       form.append('title', values.title)
@@ -971,12 +977,19 @@ function ProjectDetailScreen({ user }: { user: User }) {
         await api.post<ApiResponse<AnalysisJob>>(`/api/documents/${document.id}/analyses`)
       }
     },
-    onSuccess: refresh,
+    onSettled: async () => {
+      setUploadPolling(false)
+      await refresh()
+    },
   })
   const analysis = useMutation({
+    onMutate: (documentId) => setAnalyzingDocumentId(documentId),
     mutationFn: async (documentId: number) =>
       (await api.post<ApiResponse<AnalysisJob>>(`/api/documents/${documentId}/analyses`)).data.data,
-    onSuccess: refresh,
+    onSettled: async () => {
+      setAnalyzingDocumentId(undefined)
+      await refresh()
+    },
   })
 
   if (project.isPending || documents.isPending || testCases.isPending) return <main className="loading">프로젝트 상세 불러오는 중</main>
@@ -988,7 +1001,7 @@ function ProjectDetailScreen({ user }: { user: User }) {
     analysis: analyses[index]?.data ?? null,
   }))
   return <ProjectDetail project={project.data} documents={projectDocuments} testCases={testCases.data}
-    role={user.role} uploading={upload.isPending} analyzingDocumentId={analysis.isPending ? analysis.variables : undefined}
+    role={user.role} uploading={upload.isPending} analyzingDocumentId={analyzingDocumentId}
     uploadError={upload.isError ? '기획서를 업로드하지 못했습니다.' : undefined}
     analysisError={analysis.isError ? 'AI 분석 요청에 실패했습니다.' : undefined}
     onUpload={(values) => upload.mutateAsync(values).then(() => undefined)}
