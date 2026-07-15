@@ -59,7 +59,7 @@
 
 ## Phase 7. Jira 연동
 - [x] T-29 JiraClient 인터페이스 + MockJiraClient(목업 게시) + Issue 미리보기 API (기획서 §19.2)
-- [ ] T-30 Jira Issue 생성 플로우: 중복 방지, Output 기록, Ambiguity 상태 갱신, 실패 재시도 (기획서 §19)
+- [x] T-30 Jira Issue 생성 플로우: 중복 방지, Output 기록, Ambiguity 상태 갱신, 실패 재시도 (기획서 §19)
 - [ ] T-31 (선택/잔여 일정) 실제 Jira REST API 연동 구현체 교체
 
 ## 마무리

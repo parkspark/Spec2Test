@@ -20,6 +20,13 @@
 
 ---
 
+## [2026-07-15 14:29] T-30 Jira Issue 생성 플로우 — DONE
+- 구현 내용: QA의 명시적 POST 요청으로 OPEN 모호성을 Jira 목업에 게시하고, 성공 시 Issue Key·URL·요청/응답 데이터와 생성 사용자를 JIRA_ISSUE Output에 저장했다.
+  성공한 모호성은 ISSUE_CREATED로 갱신하며 행 잠금으로 중복 생성을 차단하고, 실패는 FAILED Output으로 남기되 모호성을 OPEN으로 유지해 재시도할 수 있게 했다.
+- 생성/수정 파일: JiraIssueService.java, JiraIssuePublicationResponse.java, JiraIssueController.java, Ambiguity.java, AmbiguityRepository.java, Output.java, JiraIssueServiceTest.java, plan/BACKLOG.md, PROGRESS.md
+- 테스트: `cd backend && ./gradlew test` 전체 61개 통과 (Gradle BUILD SUCCESSFUL)
+- 다음 작업자를 위한 메모: 다음 최상단 작업은 선택 작업 T-31 실제 Jira REST API 연동 구현체 교체다. T-30은 기존 MockJiraClient만 사용하며 실제 외부 호출·토큰 설정은 추가하지 않았다.
+
 ## [2026-07-15 14:24] T-28 프론트 산출물 화면 + Lats_Loop_Log 진행 상태 표시 — DONE
 - 구현 내용: 프로젝트 산출물 화면에 승인 테스트 케이스 수와 포함 요구사항 수, CSV·Markdown 생성/다운로드, 최종 문서 미리보기를 추가했다.
   Output 상태와 회차별 Evaluator 점수·피드백을 표시하고, 명세의 Lats_Loop_Log 조회 API를 DTO 기반으로 구현했다.

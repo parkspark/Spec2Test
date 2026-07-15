@@ -57,6 +57,18 @@ public class Ambiguity {
         this.createdAt = LocalDateTime.now();
     }
 
+    public void issueCreated(String issueKey, String issueUrl) {
+        if (status != AmbiguityStatus.OPEN || jiraIssueKey != null) {
+            throw new IllegalStateException("Jira issue already created");
+        }
+        this.jiraIssueKey = issueKey;
+        this.jiraIssueUrl = issueUrl;
+        this.status = AmbiguityStatus.ISSUE_CREATED;
+        this.publishedAt = LocalDateTime.now();
+    }
+
+    public Long getId() { return id; }
+    public PlanningDocument getPlanningDocument() { return planningDocument; }
     public String getExternalAmbiguityId() { return externalAmbiguityId; }
     public Long getAnalysisJobId() { return analysisJob.getId(); }
     public String getMajorCategory() { return majorCategory; }
@@ -70,5 +82,8 @@ public class Ambiguity {
     public AmbiguityStatus getStatus() { return status; }
     public String getRelatedRequirementIds() { return relatedRequirementIds; }
     public String getEvidences() { return evidences; }
+    public String getJiraIssueKey() { return jiraIssueKey; }
+    public String getJiraIssueUrl() { return jiraIssueUrl; }
+    public LocalDateTime getPublishedAt() { return publishedAt; }
     public Integer getDocumentPageCount() { return planningDocument.getPageCount(); }
 }

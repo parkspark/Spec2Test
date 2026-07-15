@@ -1,5 +1,6 @@
 package com.example.gameqacopilot.output;
 
+import com.example.gameqacopilot.ambiguity.Ambiguity;
 import com.example.gameqacopilot.document.entity.PlanningDocument;
 import com.example.gameqacopilot.project.Project;
 import com.example.gameqacopilot.user.User;
@@ -33,6 +34,10 @@ public class Output {
     @JoinColumn(name = "planning_document_id", nullable = false)
     private PlanningDocument planningDocument;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ambiguity_id")
+    private Ambiguity ambiguity;
+
     private String outputType;
 
     @Enumerated(EnumType.STRING)
@@ -47,6 +52,13 @@ public class Output {
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "jsonb")
     private String requestData;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(columnDefinition = "jsonb")
+    private String responseData;
+
+    private String externalResourceId;
+    private String externalUrl;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "created_by", nullable = false)
@@ -70,6 +82,19 @@ public class Output {
         this.createdAt = LocalDateTime.now();
     }
 
+    public Output(Project project, PlanningDocument planningDocument, Ambiguity ambiguity,
+            User createdBy, String requestData) {
+        this.project = project;
+        this.planningDocument = planningDocument;
+        this.ambiguity = ambiguity;
+        this.createdBy = createdBy;
+        this.outputType = "JIRA_ISSUE";
+        this.status = OutputStatus.PENDING;
+        this.externalService = "JIRA";
+        this.requestData = requestData;
+        this.createdAt = LocalDateTime.now();
+    }
+
     public void succeed(String content) {
         requirePending();
         status = OutputStatus.SUCCESS;
@@ -84,6 +109,13 @@ public class Output {
         completedAt = LocalDateTime.now();
     }
 
+    public void succeedJira(String content, String responseData, String issueKey, String issueUrl) {
+        succeed(content);
+        this.responseData = responseData;
+        this.externalResourceId = issueKey;
+        this.externalUrl = issueUrl;
+    }
+
     private void requirePending() {
         if (status != OutputStatus.PENDING) {
             throw new IllegalStateException("Output is not pending");
@@ -93,6 +125,7 @@ public class Output {
     public Long getId() { return id; }
     public Long getProjectId() { return project.getId(); }
     public Long getPlanningDocumentId() { return planningDocument.getId(); }
+    public Long getAmbiguityId() { return ambiguity == null ? null : ambiguity.getId(); }
     public String getOutputType() { return outputType; }
     public OutputStatus getStatus() { return status; }
     public String getFinalContent() { return finalContent; }
@@ -100,4 +133,8 @@ public class Output {
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getCompletedAt() { return completedAt; }
     public String getFailureReason() { return failureReason; }
+    public String getRequestData() { return requestData; }
+    public String getResponseData() { return responseData; }
+    public String getExternalResourceId() { return externalResourceId; }
+    public String getExternalUrl() { return externalUrl; }
 }
