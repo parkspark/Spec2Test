@@ -104,6 +104,91 @@
   padding: 32px;
 }
 
+.project-table-wrap {
+  overflow-x: auto;
+}
+
+.project-table {
+  width: 100%;
+  border-collapse: collapse;
+  white-space: nowrap;
+}
+
+.project-table th,
+.project-table td {
+  padding: 16px;
+  border-bottom: 1px solid #e2e8f0;
+  text-align: left;
+}
+
+.project-table th {
+  color: #475569;
+  background: #f8fafc;
+  font-size: 13px;
+}
+
+.project-table td:first-child {
+  min-width: 220px;
+}
+
+.project-table small {
+  display: block;
+  margin-top: 4px;
+  color: #64748b;
+  font-weight: 400;
+  white-space: normal;
+}
+
+.form-shell {
+  min-height: 100vh;
+  display: grid;
+  place-items: start center;
+  box-sizing: border-box;
+  padding: 48px 20px;
+}
+
+.project-form {
+  width: min(640px, 100%);
+  display: grid;
+  gap: 22px;
+  box-sizing: border-box;
+  padding: 32px;
+}
+
+.project-form label,
+.form-field {
+  display: grid;
+  gap: 7px;
+}
+
+.project-form label {
+  color: #334155;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.project-form textarea {
+  box-sizing: border-box;
+  width: 100%;
+  resize: vertical;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 12px;
+  font: inherit;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
 .document-shell {
   min-height: 100vh;
   display: grid;
@@ -426,6 +511,10 @@
   .page-shell header {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
   }
 
   .document-shell {

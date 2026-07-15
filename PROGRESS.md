@@ -6,6 +6,8 @@
 
 ## DECISION NEEDED (사람 확인 대기)
 
+- 기획서 §17.2는 프로젝트 목록에 `미확인 모호성 수` 표시를 요구하지만, 현재 백엔드에는 §16.8의 `GET /api/projects/{projectId}/ambiguities`가 구현되어 있지 않고 `GET /api/projects` 응답에도 집계 필드가 없다. 목록 API를 구현할지 프로젝트 응답에 집계값을 추가할지 결정이 필요하다. 결정 전까지 프론트에는 해당 값만 `—`로 표시한다.
+
 - T-31 실제 Jira REST API 연동은 대상 Jira가 Cloud인지 Data Center인지, 인증 방식과 API 버전, 프로젝트 키·Issue Type, 실연동/목업 구현체 선택 및 ADF 실패 시 폴백 활성화 기준이 기획서에 정의되지 않았다. 운영 대상과 설정 계약을 결정해야 한다.
 → 답변: 기획서 §26 작업17 및 §3.2 보류 범위 기준에 따라, T-31은 이번 MVP 사이클에서
     구현하지 않는다. T-29에서 만든 JiraClient 인터페이스 + MockJiraClient(목업 게시)로
@@ -25,6 +27,12 @@
     보류 범위로 남긴다.
 
 ---
+
+## [2026-07-15 16:22] T-34 프론트 프로젝트 목록·생성 화면 — DONE
+- 구현 내용: 로그인 후 `/projects` 랜딩에서 프로젝트명·장르·플랫폼·기획서 수·상태별 테스트 케이스 수·최근 분석일을 표시하고, QA에게만 생성 버튼과 `/projects/new` 폼을 제공한다. 생성 성공 시 목록 캐시를 갱신하고 목록으로 이동한다.
+- 생성/수정 파일: frontend/src/App.tsx, frontend/src/App.css, frontend/src/App.test.tsx, plan/BACKLOG.md, PROGRESS.md
+- 테스트: `cd frontend && npm run build && npm test -- --run` 통과 (Test Files 1 passed, Tests 10 passed)
+- 다음 작업자를 위한 메모: 미확인 모호성 수는 해당 목록/집계 API 결정 전까지 `—`로 표시한다. 프로젝트별 집계는 현재 기존 API를 병렬 호출하며, 목록 전용 집계 API가 추가되면 단일 요청으로 교체한다.
 
 ## [2026-07-15 14:43] T-33 README 작성 — DONE
 - 구현 내용: 기존 초기 설계 문서를 현재 구현과 설정에 맞는 프로젝트 README로 교체했다.

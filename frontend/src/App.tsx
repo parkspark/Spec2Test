@@ -18,6 +18,20 @@ export type User = {
 
 type ApiResponse<T> = { data: T }
 
+export type Project = {
+  id: number
+  name: string
+  description: string | null
+  gameGenre: string | null
+  platform: string | null
+  documentCount: number
+  generatedCount: number
+  approvedCount: number
+  rejectedCount: number
+  openAmbiguityCount: number | null
+  lastAnalyzedAt: string | null
+}
+
 export type PlanningDocument = {
   id: number
   title: string
@@ -107,6 +121,15 @@ const loginSchema = z.object({
 
 type LoginValues = z.infer<typeof loginSchema>
 
+const projectSchema = z.object({
+  name: z.string().trim().min(1, '프로젝트명을 입력해 주세요.'),
+  description: z.string(),
+  gameGenre: z.string(),
+  platform: z.string(),
+})
+
+type ProjectValues = z.infer<typeof projectSchema>
+
 export function LoginForm({
   onLogin,
   errorMessage,
@@ -150,21 +173,93 @@ export function LoginForm({
   )
 }
 
-export function ProjectHome({ user }: { user: User }) {
+export function ProjectHome({
+  user,
+  projects = [],
+  onCreate = () => undefined,
+}: {
+  user: User
+  projects?: Project[]
+  onCreate?: () => void
+}) {
   return (
     <main className="page-shell">
       <header>
         <div>
           <p className="eyebrow">{user.role}</p>
-          <h1>????</h1>
+          <h1>프로젝트</h1>
+          <p>게임 기획서 분석과 테스트 케이스 현황을 확인하세요.</p>
         </div>
-        {user.role === 'QA' && <Button>? ????</Button>}
+        {user.role === 'QA' && <Button onClick={onCreate}>프로젝트 생성</Button>}
       </header>
 
-      <section className="card empty-state" aria-label="???? ??">
-        <h2>???? ??</h2>
-        <p>???? API? ???? ?????, ??, ???? QA ??? ?????.</p>
-      </section>
+      {projects.length === 0 ? (
+        <section className="card empty-state" aria-label="프로젝트 목록">
+          <h2>등록된 프로젝트가 없습니다.</h2>
+          <p>{user.role === 'QA' ? '첫 프로젝트를 생성해 분석을 시작하세요.' : 'QA가 프로젝트를 생성하면 여기에 표시됩니다.'}</p>
+        </section>
+      ) : (
+        <section className="card project-table-wrap" aria-label="프로젝트 목록">
+          <table className="project-table">
+            <thead><tr>
+              {['프로젝트명', '게임 장르', '플랫폼', '기획서', '생성', '승인', '반려', '미확인 모호성', '최근 분석일'].map((label) => <th key={label}>{label}</th>)}
+            </tr></thead>
+            <tbody>{projects.map((project) => <tr key={project.id}>
+              <td><strong>{project.name}</strong>{project.description && <small>{project.description}</small>}</td>
+              <td>{project.gameGenre || '-'}</td>
+              <td>{project.platform || '-'}</td>
+              <td>{project.documentCount}</td>
+              <td>{project.generatedCount}</td>
+              <td>{project.approvedCount}</td>
+              <td>{project.rejectedCount}</td>
+              <td>{project.openAmbiguityCount ?? '—'}</td>
+              <td>{project.lastAnalyzedAt ? new Date(project.lastAnalyzedAt).toLocaleDateString('ko-KR') : '-'}</td>
+            </tr>)}</tbody>
+          </table>
+        </section>
+      )}
+    </main>
+  )
+}
+
+export function ProjectCreateForm({
+  onSubmit,
+  onCancel,
+  errorMessage,
+}: {
+  onSubmit: (values: ProjectValues) => Promise<void>
+  onCancel: () => void
+  errorMessage?: string
+}) {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<ProjectValues>({
+    resolver: zodResolver(projectSchema),
+    defaultValues: { name: '', description: '', gameGenre: '', platform: '' },
+  })
+
+  return (
+    <main className="form-shell">
+      <form className="card project-form" onSubmit={handleSubmit(onSubmit)} noValidate>
+        <div><p className="eyebrow">NEW PROJECT</p><h1>프로젝트 생성</h1></div>
+        <label htmlFor="project-name">프로젝트명</label>
+        <div className="form-field"><Input id="project-name" autoFocus {...register('name')} />
+          {errors.name && <span className="error">{errors.name.message}</span>}
+        </div>
+        <label htmlFor="project-description">설명</label>
+        <textarea id="project-description" rows={4} {...register('description')} />
+        <div className="form-grid">
+          <div className="form-field"><label htmlFor="project-genre">게임 장르</label><Input id="project-genre" {...register('gameGenre')} /></div>
+          <div className="form-field"><label htmlFor="project-platform">플랫폼</label><Input id="project-platform" {...register('platform')} /></div>
+        </div>
+        {errorMessage && <p className="error" role="alert">{errorMessage}</p>}
+        <div className="form-actions">
+          <Button type="button" variant="outline" onClick={onCancel}>취소</Button>
+          <Button type="submit" disabled={isSubmitting}>{isSubmitting ? '생성 중' : '생성'}</Button>
+        </div>
+      </form>
     </main>
   )
 }
@@ -639,6 +734,65 @@ function OutputScreen({ user }: { user: User }) {
     onCreate={(type) => { void create(type) }} onDownload={(output) => { void download(output) }} />
 }
 
+type ProjectApiItem = Omit<Project, 'documentCount' | 'generatedCount' | 'approvedCount' | 'rejectedCount' | 'openAmbiguityCount' | 'lastAnalyzedAt'>
+type AnalysisSummary = { requestedAt: string; completedAt: string | null }
+
+async function loadProjects(): Promise<Project[]> {
+  const projects = (await api.get<ApiResponse<ProjectApiItem[]>>('/api/projects')).data.data
+
+  // ponytail: 프로젝트별 병렬 조회는 MVP용이다. 목록 전용 집계 API가 생기면 한 요청으로 교체한다.
+  return Promise.all(projects.map(async (project) => {
+    const [documents, testCases] = await Promise.all([
+      api.get<ApiResponse<PlanningDocument[]>>(`/api/projects/${project.id}/documents`).then((response) => response.data.data),
+      api.get<ApiResponse<{ items: TestCaseItem[] }>>(`/api/projects/${project.id}/test-cases`).then((response) => response.data.data.items),
+    ])
+    const analyses = await Promise.all(documents.map((document) =>
+      api.get<ApiResponse<AnalysisSummary>>(`/api/documents/${document.id}/analyses/latest`)
+        .then((response) => response.data.data)
+        .catch(() => null),
+    ))
+    const lastAnalyzedAt = analyses.reduce<string | null>((latest, analysis) => {
+      const date = analysis?.completedAt ?? analysis?.requestedAt
+      return date && (!latest || date > latest) ? date : latest
+    }, null)
+
+    return {
+      ...project,
+      documentCount: documents.length,
+      generatedCount: testCases.filter((item) => item.status === 'GENERATED').length,
+      approvedCount: testCases.filter((item) => item.status === 'APPROVED').length,
+      rejectedCount: testCases.filter((item) => item.status === 'REJECTED').length,
+      openAmbiguityCount: null,
+      lastAnalyzedAt,
+    }
+  }))
+}
+
+function ProjectScreen({ user }: { user: User }) {
+  const navigate = useNavigate()
+  const projects = useQuery({ queryKey: ['projects'], queryFn: loadProjects })
+  if (projects.isPending) return <main className="loading">프로젝트 불러오는 중</main>
+  if (projects.isError) return <main className="loading">프로젝트를 불러오지 못했습니다.</main>
+  return <ProjectHome user={user} projects={projects.data} onCreate={() => navigate('/projects/new')} />
+}
+
+function ProjectCreateScreen() {
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
+  const create = useMutation({
+    mutationFn: async (values: ProjectValues) => (await api.post<ApiResponse<ProjectApiItem>>('/api/projects', values)).data.data,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['projects'] })
+      navigate('/projects')
+    },
+  })
+  return <ProjectCreateForm
+    onSubmit={(values) => create.mutateAsync(values).then(() => undefined)}
+    onCancel={() => navigate('/projects')}
+    errorMessage={create.isError ? '프로젝트를 생성하지 못했습니다.' : undefined}
+  />
+}
+
 function App() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -675,7 +829,11 @@ function App() {
       />
       <Route
         path="/projects"
-        element={userQuery.data ? <ProjectHome user={userQuery.data} /> : <Navigate to="/login" replace />}
+        element={userQuery.data ? <ProjectScreen user={userQuery.data} /> : <Navigate to="/login" replace />}
+      />
+      <Route
+        path="/projects/new"
+        element={userQuery.data?.role === 'QA' ? <ProjectCreateScreen /> : <Navigate to={userQuery.data ? '/projects' : '/login'} replace />}
       />
       <Route
         path="/documents/:documentId"

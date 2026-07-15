@@ -1,7 +1,9 @@
-import { render, screen, within } from '@testing-library/react'
+import { cleanup, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it, vi } from 'vitest'
-import { DocumentViewer, EvidencePanel, LoginForm, OutputDownload, ProjectHome, TestCaseSheet, type TestCaseItem } from './App'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { DocumentViewer, EvidencePanel, LoginForm, OutputDownload, ProjectCreateForm, ProjectHome, TestCaseSheet, type Project, type TestCaseItem } from './App'
+
+afterEach(cleanup)
 
 describe('role-based frontend skeleton', () => {
   it('validates the login form before submitting', async () => {
@@ -19,10 +21,36 @@ describe('role-based frontend skeleton', () => {
     const { rerender } = render(
       <ProjectHome user={{ id: 1, email: 'qa@example.com', name: 'QA', role: 'QA' }} />,
     )
-    expect(screen.getByRole('button', { name: '? ????' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '프로젝트 생성' })).toBeInTheDocument()
 
     rerender(<ProjectHome user={{ id: 2, email: 'user@example.com', name: 'User', role: 'USER' }} />)
-    expect(screen.queryByRole('button', { name: '? ????' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '프로젝트 생성' })).not.toBeInTheDocument()
+  })
+
+  it('renders every project summary column', () => {
+    const project: Project = { id: 1, name: '신작 RPG', description: '전투 시스템', gameGenre: 'RPG', platform: 'PC',
+      documentCount: 2, generatedCount: 5, approvedCount: 3, rejectedCount: 1, openAmbiguityCount: null,
+      lastAnalyzedAt: '2026-07-15T12:00:00' }
+    render(<ProjectHome user={{ id: 2, email: 'user@example.com', name: 'User', role: 'USER' }} projects={[project]} />)
+
+    expect(screen.getAllByRole('columnheader')).toHaveLength(9)
+    expect(screen.getByText('신작 RPG')).toBeInTheDocument()
+    expect(screen.getByText('RPG')).toBeInTheDocument()
+    expect(screen.getByText('—')).toBeInTheDocument()
+  })
+
+  it('validates and submits the project creation form', async () => {
+    const onSubmit = vi.fn().mockResolvedValue(undefined)
+    render(<ProjectCreateForm onSubmit={onSubmit} onCancel={vi.fn()} />)
+
+    await userEvent.click(screen.getByRole('button', { name: '생성' }))
+    expect(await screen.findByText('프로젝트명을 입력해 주세요.')).toBeInTheDocument()
+    await userEvent.type(screen.getByLabelText('프로젝트명'), '신작 RPG')
+    await userEvent.type(screen.getByLabelText('게임 장르'), 'RPG')
+    await userEvent.type(screen.getByLabelText('플랫폼'), 'PC')
+    await userEvent.click(screen.getByRole('button', { name: '생성' }))
+
+    expect(onSubmit).toHaveBeenCalledWith({ name: '신작 RPG', description: '', gameGenre: 'RPG', platform: 'PC' }, expect.anything())
   })
 
   it('shows PDF page text and moves between pages', async () => {
