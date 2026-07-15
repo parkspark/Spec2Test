@@ -158,7 +158,7 @@ public class TestCaseGenerationService {
             List<AiAnalysisResponse.Evidence> evidences) {
         return new TestCase(job, requirement, value,
                 json(value.preconditions()), json(value.testSteps()), json(value.expectedResults()),
-                json(evidences), json(value.notes()),
+                json(evidences), json(TestCaseNotes.merge(value.notes(), evidences)),
                 value.requiresHumanReview() || evidenceVerifier.requiresHumanReview(evidences));
     }
 

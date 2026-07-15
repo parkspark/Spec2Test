@@ -9,6 +9,14 @@
 
 ---
 
+## [2026-07-15 12:19] T-19 비고 자동 생성 규칙 구현 — DONE
+- 구현 내용: 검증된 Evidence의 INFERRED·UNSUPPORTED 유형과 SIMILAR·NOT_FOUND 원문 검증 상태에 따라 기획서 §20.8 비고를 자동 생성한다.
+  AI가 생성한 기존 비고와 기대결과 정책 미정 표시는 보존하고, 동일 비고는 중복 저장하지 않으며 관련 모호성 비고는 기존 연동 흐름을 유지한다.
+- 생성/수정 파일: TestCaseNotes.java, TestCaseGenerationService.java, TestCaseNotesTest.java, TestCaseGenerationServiceTest.java, plan/BACKLOG.md, PROGRESS.md
+- 테스트: cd backend && ./gradlew test --no-daemon --console=plain --no-problems-report 전체 42개 통과 (Gradle BUILD SUCCESSFUL)
+- 다음 작업자를 위한 메모: 다음 작업은 T-20 테스트 케이스 목록·상세 API다. 기대결과 정책 미정은 구조화 플래그가 없어 AI가 생성한 notes 값을 보존하며, 관련 모호성은 AmbiguityGenerationService가 기획 확인 필요를 추가한다.
+- 커밋 실패 — 사람이 수동 커밋 필요 (.git ACL 문제). 사람이 수동 커밋 처리함
+
 ## [2026-07-15 12:09] T-17 Evidence 원문 일치 검증 — DONE
 - 구현 내용: 해당 페이지 텍스트의 공백·줄바꿈을 정규화하고 EXACT→PARTIAL→Levenshtein 유사도 0.7 이상 SIMILAR→NOT_FOUND 순서로 원문을 검증해 저장한다.
   NOT_FOUND는 UNSUPPORTED로 전환하고, SIMILAR·NOT_FOUND 테스트 케이스는 requiresHumanReview=true로 저장하며 페이지 범위 밖 Evidence는 거부한다.

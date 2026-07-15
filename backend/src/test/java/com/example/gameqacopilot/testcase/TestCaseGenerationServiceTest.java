@@ -57,6 +57,7 @@ class TestCaseGenerationServiceTest {
             var testCase = (TestCase) value;
             assertThat(testCase.getStatus()).isEqualTo(TestCaseStatus.GENERATED);
             assertThat(testCase.getEvidences()).contains("sourceText");
+            assertThat(testCase.getNotes()).contains("기획서 직접 근거 없음", "원문 확인 불가");
             assertThat(testCase.isRequiresHumanReview()).isTrue();
         });
         verify(jobs).recordTestCases(eq(5L), anyString(), eq(0L));
