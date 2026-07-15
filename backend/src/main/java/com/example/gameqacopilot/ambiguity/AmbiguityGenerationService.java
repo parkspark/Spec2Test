@@ -3,6 +3,7 @@ package com.example.gameqacopilot.ambiguity;
 import com.example.gameqacopilot.analysis.dto.AiAnalysisResponse;
 import com.example.gameqacopilot.analysis.dto.AmbiguityGenerationResponse;
 import com.example.gameqacopilot.analysis.service.AnalysisJobService;
+import com.example.gameqacopilot.analysis.validator.AnalysisResultValidator;
 import com.example.gameqacopilot.requirement.Requirement;
 import com.example.gameqacopilot.requirement.RequirementRepository;
 import com.example.gameqacopilot.testcase.TestCase;
@@ -14,6 +15,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.HashSet;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.springframework.ai.chat.client.ChatClient;
@@ -52,12 +54,13 @@ public class AmbiguityGenerationService {
             List<AiAnalysisResponse.TestCase> testCaseValues) {
         try {
             var job = jobs.prepareRequirements(jobId).job();
-            var response = chatClient.prompt().system(systemPrompt)
-                    .user(request(requirementValues, testCaseValues)).call()
-                    .responseEntity(AmbiguityGenerationResponse.class);
             var byExternalId = requirements.findAllByAnalysisJob_Id(jobId).stream()
                     .collect(Collectors.toMap(Requirement::getExternalRequirementId, Function.identity()));
-            validate(response.entity(), byExternalId);
+            String request = request(requirementValues, testCaseValues);
+            var response = AnalysisResultValidator.validateWithOneRetry(
+                    () -> chatClient.prompt().system(systemPrompt).user(request).call()
+                            .responseEntity(AmbiguityGenerationResponse.class),
+                    value -> validate(value.entity(), byExternalId));
             ambiguities.saveAll(response.entity().ambiguities().stream()
                     .map(value -> new Ambiguity(job, value, json(value.evidences()))).toList());
             linkTestCases(jobId, response.entity().ambiguities());
@@ -75,11 +78,14 @@ public class AmbiguityGenerationService {
         if (response == null || response.ambiguities() == null) {
             throw new IllegalArgumentException(\u0022Ambiguities are missing\u0022);
         }
+        var ids = new HashSet<String>();
         for (var value : response.ambiguities()) {
             if (blank(value.ambiguityId()) || blank(value.title()) || blank(value.description())
                     || blank(value.question()) || blank(value.impact()) || blank(value.severity())
+                    || !ids.add(value.ambiguityId())
                     || value.relatedRequirementIds() == null || value.relatedRequirementIds().isEmpty()
-                    || value.evidences() == null || value.evidences().isEmpty()) {
+                    || value.evidences() == null || value.evidences().isEmpty()
+                    || value.evidences().stream().anyMatch(AnalysisResultValidator::invalidEvidence)) {
                 throw new IllegalArgumentException(\u0022Ambiguity fields, requirements and evidence are required\u0022);
             }
             var related = value.relatedRequirementIds().stream().map(requirements::get).toList();

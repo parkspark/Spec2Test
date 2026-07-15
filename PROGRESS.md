@@ -10,6 +10,14 @@
 
 ---
 
+## [2026-07-15 11:26] T-16 분석 결과 스키마/Enum/분류 일관성/중복 검증 + 실패 시 1회 재시도 — DONE
+- 구현 내용: 분류·요구사항·테스트 케이스·모호성 AI 응답에 공통 1회 재시도를 적용하고, 두 번째 실패 후에만 기존 AnalysisJob 실패 처리로 전달한다.
+  JSON 필수 필드와 Enum 역직렬화, Evidence 구조·좌표 범위, 분류명 일관성, ID·출력 순서·동일 목적 테스트 케이스 중복을 저장 전에 검증한다.
+- 생성/수정 파일: AnalysisResultValidator.java, CategoryClassificationService.java, RequirementExtractionService.java, TestCaseGenerationService.java, AmbiguityGenerationService.java, 관련 단위 테스트, plan/BACKLOG.md, PROGRESS.md
+- 테스트: `cd backend && ./gradlew test --rerun-tasks --no-daemon --console=plain --no-problems-report` 전체 36개 통과 (Gradle BUILD SUCCESSFUL)
+- 다음 작업자를 위한 메모: T-17에서 추출 원문을 기준으로 Evidence의 EXACT/PARTIAL/SIMILAR/NOT_FOUND를 판정하고 NOT_FOUND를 UNSUPPORTED로 전환한다. 현재 T-16은 스키마상 페이지 번호 최소값만 검증하며 문서 pageCount 상한·원문 일치는 T-17 범위다.
+- 커밋 실패 — 사람이 수동 커밋 필요 (.git ACL 문제). 사람이 수동 커밋 처리함
+
 ## [2026-07-15 11:16] T-15 모호한 요구사항 생성 단계 구현 + Ambiguity 저장 + 관련 TC 비고 연동 — DONE
 - 구현 내용: 요구사항과 테스트 케이스를 기반으로 임의 확정 없이 질문·영향도·심각도·Evidence를 포함한 모호성을 생성하고 OPEN 상태로 저장한다.
   관련 요구사항 ID와 분류를 실존 데이터로 검증하고, 연결된 테스트 케이스 비고에 관련 모호성 ID와 기획 확인 필요를 추가해 사람 검토 대상으로 표시한다.

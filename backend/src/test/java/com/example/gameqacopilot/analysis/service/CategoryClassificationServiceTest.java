@@ -69,6 +69,7 @@ class CategoryClassificationServiceTest {
         org.assertj.core.api.Assertions.assertThatThrownBy(() -> service().classify(9L))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessage("Feature classification failed");
+        verify(chatModel, times(2)).call(any(Prompt.class));
         verify(jobs).fail(9L, "Missing middle category must be '-'");
     }
 

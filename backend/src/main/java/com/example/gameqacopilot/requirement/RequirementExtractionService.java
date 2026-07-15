@@ -3,11 +3,13 @@ package com.example.gameqacopilot.requirement;
 import com.example.gameqacopilot.analysis.dto.AiAnalysisResponse;
 import com.example.gameqacopilot.analysis.dto.RequirementExtractionResponse;
 import com.example.gameqacopilot.analysis.service.AnalysisJobService;
+import com.example.gameqacopilot.analysis.validator.AnalysisResultValidator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.HashSet;
 import java.util.stream.IntStream;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.content.Media;
@@ -56,10 +58,12 @@ public class RequirementExtractionService {
                 + "\n\n확정된 분류 체계 JSON:\n" + objectMapper.writeValueAsString(categoryTree)
                 + "\n\nPDF 추출 텍스트:\n" + document.extractedText()
                 + "\n\n페이지 요소 JSON:\n" + document.pageContents();
-        var response = chatClient.prompt().system(systemPrompt)
-                .user(user -> user.text(request).media(pageImages(document))).call()
-                .responseEntity(RequirementExtractionResponse.class);
-        validate(response.entity(), categoryTree);
+        var media = pageImages(document);
+        var response = AnalysisResultValidator.validateWithOneRetry(
+                () -> chatClient.prompt().system(systemPrompt)
+                        .user(user -> user.text(request).media(media)).call()
+                        .responseEntity(RequirementExtractionResponse.class),
+                value -> validate(value.entity(), categoryTree));
         requirements.saveAll(response.entity().requirements().stream()
                 .map(value -> toEntity(input.job(), value)).toList());
         var chatResponse = response.response();
@@ -85,6 +89,7 @@ public class RequirementExtractionService {
         if (response == null || response.requirements() == null || response.requirements().isEmpty()) {
             throw new IllegalArgumentException("Requirements are empty");
         }
+        var requirementIds = new HashSet<String>();
         for (var requirement : response.requirements()) {
             boolean knownCategory = categoryTree.stream().anyMatch(major ->
                     major.majorCategory().equals(requirement.majorCategory())
@@ -92,12 +97,21 @@ public class RequirementExtractionService {
                             middle.name().equals(requirement.middleCategory())
                             && middle.minorCategories().contains(requirement.minorCategory())));
             if (!knownCategory) throw new IllegalArgumentException("Requirement category is not in category tree");
-            if (requirement.requirementId() == null || requirement.requirementId().isBlank()
+            if (blank(requirement.requirementId()) || !requirementIds.add(requirement.requirementId())
+                    || blank(requirement.title()) || blank(requirement.description())
+                    || blank(requirement.actor()) || requirement.preconditions() == null
+                    || blank(requirement.trigger())
+                    || requirement.expectedBehaviors() == null || requirement.expectedBehaviors().isEmpty()
+                    || requirement.expectedBehaviors().stream().anyMatch(this::blank)
                     || requirement.evidences() == null || requirement.evidences().isEmpty()
-                    || requirement.evidences().stream().anyMatch(evidence -> evidence.pageNumber() == null)) {
-                throw new IllegalArgumentException("Requirement ID and page evidence are required");
+                    || requirement.evidences().stream().anyMatch(AnalysisResultValidator::invalidEvidence)) {
+                throw new IllegalArgumentException("Requirement fields and evidence are invalid");
             }
         }
+    }
+
+    private boolean blank(String value) {
+        return value == null || value.isBlank();
     }
 
     private Requirement toEntity(com.example.gameqacopilot.analysis.entity.AnalysisJob job,

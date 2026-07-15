@@ -61,6 +61,40 @@ class TestCaseGenerationServiceTest {
         verify(jobs).recordTestCases(eq(5L), anyString(), eq(0L));
     }
 
+    @Test
+    void retriesDuplicateTestCasesOnceBeforeSaving() throws Exception {
+        var job = mock(AnalysisJob.class);
+        var document = mock(PlanningDocument.class);
+        when(job.getPlanningDocument()).thenReturn(document);
+        when(document.getProject()).thenReturn(mock(Project.class));
+        when(jobs.prepareRequirements(5L)).thenReturn(
+                new AnalysisJobService.RequirementInput(job, mock(AnalysisJobService.AnalysisInput.class)));
+        var requirement = mock(Requirement.class);
+        when(requirement.getExternalRequirementId()).thenReturn("REQ-001");
+        when(requirement.getMajorCategory()).thenReturn("무료 뽑기");
+        when(requirement.getMiddleCategory()).thenReturn("보상 지급");
+        when(requirement.getMinorCategory()).thenReturn("일일 무료 횟수");
+        when(requirements.findAllByAnalysisJob_Id(5L)).thenReturn(List.of(requirement));
+        var mapper = new ObjectMapper();
+        String duplicate = mapper.writeValueAsString(
+                new com.example.gameqacopilot.analysis.dto.TestCaseGenerationResponse(
+                        List.of(value(), value())));
+        String valid = mapper.writeValueAsString(
+                new com.example.gameqacopilot.analysis.dto.TestCaseGenerationResponse(List.of(value())));
+        when(chatModel.call(any(Prompt.class))).thenReturn(
+                new ChatResponse(List.of(new Generation(new AssistantMessage(duplicate)))),
+                new ChatResponse(List.of(new Generation(new AssistantMessage(valid)))));
+        var categories = List.of(new AiAnalysisResponse.CategoryTree("무료 뽑기",
+                List.of(new AiAnalysisResponse.MiddleCategory("보상 지급", List.of("일일 무료 횟수")))));
+
+        var response = service().generate(5L, categories, List.of());
+
+        assertThat(response.testCases()).hasSize(1);
+        verify(chatModel, times(2)).call(any(Prompt.class));
+        verify(testCases).saveAll(any());
+        verify(jobs, never()).fail(anyLong(), anyString());
+    }
+
     private TestCaseGenerationService service() {
         return new TestCaseGenerationService(jobs, requirements, testCases,
                 ChatClient.builder(chatModel), new ObjectMapper(),

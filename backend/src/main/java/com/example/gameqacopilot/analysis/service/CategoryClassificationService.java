@@ -1,8 +1,10 @@
 package com.example.gameqacopilot.analysis.service;
 
 import com.example.gameqacopilot.analysis.dto.CategoryClassificationResponse;
+import com.example.gameqacopilot.analysis.validator.AnalysisResultValidator;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.HashSet;
 import java.util.stream.IntStream;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.content.Media;
@@ -50,12 +52,11 @@ public class CategoryClassificationService {
             String request = classificationPrompt.getContentAsString(StandardCharsets.UTF_8)
                     + "\n\nPDF 추출 텍스트:\n" + input.extractedText()
                     + "\n\n페이지 요소 JSON:\n" + input.pageContents();
-            var response = chatClient.prompt()
-                    .system(systemPrompt)
-                    .user(user -> user.text(request).media(media))
-                    .call()
-                    .responseEntity(CategoryClassificationResponse.class);
-            validate(response.entity());
+            var response = AnalysisResultValidator.validateWithOneRetry(
+                    () -> chatClient.prompt().system(systemPrompt)
+                            .user(user -> user.text(request).media(media)).call()
+                            .responseEntity(CategoryClassificationResponse.class),
+                    value -> validate(value.entity()));
             var chatResponse = response.response();
             String raw = chatResponse.getResult().getOutput().getText();
             var usage = chatResponse.getMetadata().getUsage();
@@ -69,21 +70,31 @@ public class CategoryClassificationService {
     }
 
     private void validate(CategoryClassificationResponse response) {
-        if (response == null || response.categoryTree() == null || response.categoryTree().isEmpty()) {
+        if (response == null || response.categoryTree() == null || response.categoryTree().isEmpty()
+                || response.evidences() == null) {
             throw new IllegalArgumentException("Category tree is empty");
         }
+        var majorNames = new HashSet<String>();
         for (var major : response.categoryTree()) {
             if (major.majorCategory() == null || major.majorCategory().isBlank()) {
                 throw new IllegalArgumentException("Major category is required");
             }
+            if (!majorNames.add(major.majorCategory())) {
+                throw new IllegalArgumentException("Duplicate major category");
+            }
             if (major.middleCategories() == null || major.middleCategories().isEmpty()) {
                 throw new IllegalArgumentException("Missing middle category must be '-'");
             }
+            var middleNames = new HashSet<String>();
             for (var middle : major.middleCategories()) {
                 if (middle.name() == null || middle.name().isBlank()
                         || middle.minorCategories() == null || middle.minorCategories().isEmpty()
                         || middle.minorCategories().stream().anyMatch(value -> value == null || value.isBlank())) {
                     throw new IllegalArgumentException("Missing categories must be '-'");
+                }
+                if (!middleNames.add(middle.name())
+                        || new HashSet<>(middle.minorCategories()).size() != middle.minorCategories().size()) {
+                    throw new IllegalArgumentException("Duplicate category");
                 }
             }
         }

@@ -3,6 +3,7 @@ package com.example.gameqacopilot.testcase;
 import com.example.gameqacopilot.analysis.dto.AiAnalysisResponse;
 import com.example.gameqacopilot.analysis.dto.TestCaseGenerationResponse;
 import com.example.gameqacopilot.analysis.service.AnalysisJobService;
+import com.example.gameqacopilot.analysis.validator.AnalysisResultValidator;
 import com.example.gameqacopilot.requirement.Requirement;
 import com.example.gameqacopilot.requirement.RequirementRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -10,6 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
+import java.util.HashSet;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.springframework.ai.chat.client.ChatClient;
@@ -72,11 +74,12 @@ public class TestCaseGenerationService {
     private TestCaseGenerationResponse call(Long jobId,
             com.example.gameqacopilot.analysis.entity.AnalysisJob job,
             List<AiAnalysisResponse.CategoryTree> categories, String request) {
-        var response = chatClient.prompt().system(systemPrompt).user(request).call()
-                .responseEntity(TestCaseGenerationResponse.class);
         var byExternalId = requirements.findAllByAnalysisJob_Id(jobId).stream()
                 .collect(Collectors.toMap(Requirement::getExternalRequirementId, Function.identity()));
-        validate(response.entity(), categories, byExternalId);
+        var response = AnalysisResultValidator.validateWithOneRetry(
+                () -> chatClient.prompt().system(systemPrompt).user(request).call()
+                        .responseEntity(TestCaseGenerationResponse.class),
+                value -> validate(value.entity(), categories, byExternalId));
         testCases.saveAll(response.entity().testCases().stream()
                 .map(value -> toEntity(job, byExternalId.get(value.requirementId()), value)).toList());
         var chatResponse = response.response();
@@ -92,12 +95,20 @@ public class TestCaseGenerationService {
         if (response == null || response.testCases() == null || response.testCases().isEmpty()) {
             throw new IllegalArgumentException("Test cases are empty");
         }
+        var ids = new HashSet<String>();
+        var orders = new HashSet<Integer>();
+        var purposes = new HashSet<String>();
         for (var value : response.testCases()) {
             if (!knownCategory(categories, value)
                     || !matchesRequirement(requirements.get(value.requirementId()), value)) {
                 throw new IllegalArgumentException("Invalid test case category or requirement");
             }
             validateRequired(value);
+            if (!ids.add(value.testCaseId()) || !orders.add(value.displayOrder())
+                    || !purposes.add(String.join("|", value.majorCategory(), value.middleCategory(),
+                            value.minorCategory(), value.testItem().strip()))) {
+                throw new IllegalArgumentException("Duplicate test case");
+            }
         }
     }
 
@@ -118,10 +129,22 @@ public class TestCaseGenerationService {
     }
 
     private void validateRequired(AiAnalysisResponse.TestCase value) {
-        if (value.testCaseId() == null || value.testCaseId().isBlank() || value.displayOrder() < 1
-                || value.evidences() == null || value.evidences().isEmpty()) {
-            throw new IllegalArgumentException("Test case ID, order and evidence are required");
+        if (blank(value.testCaseId()) || value.displayOrder() < 1 || blank(value.testItem())
+                || value.testType() == null || blank(value.priority()) || value.confidence() == null
+                || value.preconditions() == null || value.notes() == null
+                || value.testSteps() == null || value.testSteps().isEmpty()
+                || value.testSteps().stream().anyMatch(step -> step.stepNumber() < 1
+                        || blank(step.action()) || blank(step.expectedResult()))
+                || value.expectedResults() == null || value.expectedResults().isEmpty()
+                || value.expectedResults().stream().anyMatch(this::blank)
+                || value.evidences() == null || value.evidences().isEmpty()
+                || value.evidences().stream().anyMatch(AnalysisResultValidator::invalidEvidence)) {
+            throw new IllegalArgumentException("Test case fields and evidence are invalid");
         }
+    }
+
+    private boolean blank(String value) {
+        return value == null || value.isBlank();
     }
 
     private TestCase toEntity(com.example.gameqacopilot.analysis.entity.AnalysisJob job,
