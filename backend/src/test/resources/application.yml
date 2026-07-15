@@ -9,3 +9,13 @@ spring:
     open-in-view: false
   flyway:
     enabled: true
+  ai:
+    openai:
+      api-key: test-key
+      chat:
+        options:
+          model: test-model
+
+app:
+  ai:
+    model: test-model

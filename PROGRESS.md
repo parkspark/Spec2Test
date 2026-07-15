@@ -10,6 +10,14 @@
 
 ---
 
+## [2026-07-15 10:07] T-12 Spring AI ChatClient 멀티모달 호출 + 기능 분류 추출 단계 구현 — DONE
+- 구현 내용: Spring AI ChatClient에 추출 텍스트·페이지 요소 JSON·모든 페이지 이미지를 함께 전달해 기능 분류 구조를 생성한다.
+  구조화 응답의 Evidence와 대/중/소분류 필수값(`-` 포함)을 검증하고, 모델·프롬프트 버전·원문 응답·토큰 사용량 및 실패 상태를 AnalysisJob에 기록한다.
+- 생성/수정 파일: backend/build.gradle, CategoryClassificationResponse.java, CategoryClassificationService.java, AnalysisJob.java, AnalysisJobService.java, AnalysisJobController.java, application.yml, classification.txt, CategoryClassificationServiceTest.java, AnalysisJobIntegrationTest.java, plan/BACKLOG.md, PROGRESS.md
+- 테스트: `cd backend && ./gradlew test` 전체 30개 통과 (Gradle BUILD SUCCESSFUL)
+- 다음 작업자를 위한 메모: T-13은 PROCESSING 상태 작업의 rawResponse에 저장된 categoryTree를 재사용해 동일 분류명으로 Requirement를 생성·저장한다. 실행 환경에 OPENAI_API_KEY와 멀티모달 지원 AI_MODEL이 필요하다.
+- 커밋 실패 — 사람이 수동 커밋 필요 (.git ACL 문제). 사람이 수동 커밋 처리함
+
 ## [2026-07-15 09:46] T-11 프롬프트 리소스 파일 작성 — DONE
 - 구현 내용: 기획서 §20의 시스템·분류·테스트케이스·모호성·Evidence·금지 규칙을 v1.0 리소스 6종으로 분리했다.
   AI 응답 JSON 스키마의 필드명과 Enum을 사용하고, 리소스 패키징 및 핵심 규칙을 계약 테스트로 검증했다.

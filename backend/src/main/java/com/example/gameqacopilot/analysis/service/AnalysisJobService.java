@@ -4,6 +4,7 @@ import com.example.gameqacopilot.analysis.dto.AnalysisJobResponse;
 import com.example.gameqacopilot.analysis.entity.AnalysisJob;
 import com.example.gameqacopilot.analysis.repository.AnalysisJobRepository;
 import com.example.gameqacopilot.document.entity.DocumentProcessingStatus;
+import com.example.gameqacopilot.document.entity.PlanningDocument;
 import com.example.gameqacopilot.document.repository.PlanningDocumentRepository;
 import com.example.gameqacopilot.user.UserRepository;
 import java.util.NoSuchElementException;
@@ -45,5 +46,36 @@ public class AnalysisJobService {
         if (!documents.existsById(documentId)) throw new NoSuchElementException("Document not found");
         return AnalysisJobResponse.from(jobs.findFirstByPlanningDocument_IdOrderByCreatedAtDesc(documentId)
                 .orElseThrow(() -> new NoSuchElementException("Analysis not found")));
+    }
+
+    @Transactional
+    public AnalysisInput startClassification(Long id, String modelName, String promptVersion) {
+        var job = requireJob(id);
+        job.start(modelName, promptVersion);
+        var document = documents.findById(job.getPlanningDocumentId())
+                .orElseThrow(() -> new NoSuchElementException("Document not found"));
+        return AnalysisInput.from(document);
+    }
+
+    @Transactional
+    public void recordClassification(Long id, String rawResponse, Long tokenUsage) {
+        requireJob(id).recordClassification(rawResponse, tokenUsage);
+    }
+
+    @Transactional
+    public void fail(Long id, String reason) {
+        requireJob(id).fail(reason);
+    }
+
+    private AnalysisJob requireJob(Long id) {
+        return jobs.findById(id).orElseThrow(() -> new NoSuchElementException("Analysis not found"));
+    }
+
+    public record AnalysisInput(
+            String extractedText, String pageContents, String storedFilePath, int pageCount) {
+        static AnalysisInput from(PlanningDocument document) {
+            return new AnalysisInput(document.getExtractedText(), document.getPageContents(),
+                    document.getStoredFilePath(), document.getPageCount());
+        }
     }
 }

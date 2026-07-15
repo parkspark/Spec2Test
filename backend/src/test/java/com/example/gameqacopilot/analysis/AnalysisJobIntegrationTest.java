@@ -5,8 +5,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.mockito.Mockito.verify;
 
 import com.example.gameqacopilot.common.security.CurrentUser;
+import com.example.gameqacopilot.analysis.service.CategoryClassificationService;
 import com.example.gameqacopilot.user.UserRole;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,12 +17,14 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 class AnalysisJobIntegrationTest {
     @Autowired MockMvc mockMvc;
     @Autowired JdbcClient jdbcClient;
+    @MockitoBean CategoryClassificationService classifications;
     private CurrentUser qa;
     private CurrentUser regularUser;
     private Long documentId;
@@ -58,6 +62,7 @@ class AnalysisJobIntegrationTest {
                 .andExpect(jsonPath("$.data.status").value("PENDING"))
                 .andExpect(jsonPath("$.data.planningDocumentId").value(documentId));
         Long analysisId = jdbcClient.sql("SELECT id FROM analysis_jobs").query(Long.class).single();
+        verify(classifications).classify(analysisId);
 
         mockMvc.perform(get("/api/analyses/{analysisId}", analysisId).with(user(regularUser)))
                 .andExpect(status().isOk())

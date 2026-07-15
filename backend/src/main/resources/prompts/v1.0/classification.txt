@@ -6,3 +6,4 @@ categoryTree의 각 항목은 majorCategory와 middleCategories를 포함하고,
 기획서에 나타난 명칭을 우선 사용하고, 이후 requirements와 testCases에서
 동일한 기능에는 동일한 majorCategory, middleCategory, minorCategory를 재사용하십시오.
 적절한 중분류 또는 소분류가 없으면 빈 문자열 대신 -를 반환하십시오.
+응답은 categoryTree와 이를 뒷받침하는 원문 evidences를 포함한 JSON 객체로 반환하십시오.

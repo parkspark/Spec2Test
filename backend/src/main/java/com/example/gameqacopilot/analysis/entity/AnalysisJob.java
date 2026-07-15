@@ -38,6 +38,24 @@ public class AnalysisJob {
         this.createdAt = requestedAt;
     }
 
+    public void start(String modelName, String promptVersion) {
+        this.status = AnalysisJobStatus.PROCESSING;
+        this.modelName = modelName;
+        this.promptVersion = promptVersion;
+        this.startedAt = LocalDateTime.now();
+    }
+
+    public void recordClassification(String rawResponse, Long tokenUsage) {
+        this.rawResponse = rawResponse;
+        this.tokenUsage = tokenUsage;
+    }
+
+    public void fail(String reason) {
+        this.status = AnalysisJobStatus.FAILED;
+        this.failureReason = reason;
+        this.completedAt = LocalDateTime.now();
+    }
+
     public Long getId() { return id; }
     public Long getPlanningDocumentId() { return planningDocument.getId(); }
     public AnalysisJobStatus getStatus() { return status; }

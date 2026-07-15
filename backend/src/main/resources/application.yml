@@ -11,6 +11,17 @@ spring:
     open-in-view: false
   flyway:
     enabled: true
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY}
+      chat:
+        options:
+          model: ${AI_MODEL}
+
+app:
+  ai:
+    model: ${AI_MODEL}
+    prompt-version: v1.0
 
 springdoc:
   swagger-ui:
