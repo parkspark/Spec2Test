@@ -46,7 +46,7 @@ class AmbiguityGenerationServiceTest {
         var testCase = mock(TestCase.class);
         when(testCase.getRequirementExternalId()).thenReturn(\u0022REQ-001\u0022);
         when(testCase.getNotes()).thenReturn(\u0022[]\u0022);
-        when(testCases.findAllByAnalysisJob_Id(6L)).thenReturn(List.of(testCase));
+        when(testCases.findAllWithRequirementByAnalysisJobId(6L)).thenReturn(List.of(testCase));
         var response = new AmbiguityGenerationResponse(List.of(value()));
         String json = new ObjectMapper().writeValueAsString(response);
         when(chatModel.call(any(Prompt.class))).thenReturn(new ChatResponse(
@@ -68,6 +68,7 @@ class AmbiguityGenerationServiceTest {
         verify(testCase).updateNotesForAmbiguity(notes.capture());
         assertThat(notes.getValue()).contains(\u0022관련 모호성: AMB-001\u0022, \u0022기획 확인 필요\u0022);
         verify(jobs).recordAmbiguities(eq(6L), anyString(), eq(0L));
+        verify(testCases).findAllWithRequirementByAnalysisJobId(6L);
     }
     private AmbiguityGenerationService service() {
         return new AmbiguityGenerationService(jobs, requirements, testCases, ambiguities,

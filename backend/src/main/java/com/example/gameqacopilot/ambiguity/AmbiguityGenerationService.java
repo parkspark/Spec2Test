@@ -105,7 +105,7 @@ public class AmbiguityGenerationService {
     }
 
     private void linkTestCases(Long jobId, List<AiAnalysisResponse.Ambiguity> values) {
-        var cases = testCases.findAllByAnalysisJob_Id(jobId);
+        var cases = testCases.findAllWithRequirementByAnalysisJobId(jobId);
         for (var value : values) {
             cases.stream().filter(testCase ->
                     value.relatedRequirementIds().contains(testCase.getRequirementExternalId()))
