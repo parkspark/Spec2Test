@@ -68,6 +68,17 @@ class TestCaseQueryServiceTest {
     }
 
     @Test
+    void usesSimpleQueryWhenNoFiltersAreProvided() {
+        when(projects.existsById(1L)).thenReturn(true);
+        when(testCases.findAllByProject_IdOrderByDisplayOrder(1L)).thenReturn(List.of(testCase));
+
+        var response = service.findAll(1L, null, null, null, null, null, null, null, null);
+
+        assertThat(response.items()).hasSize(1);
+        verify(testCases).findAllByProject_IdOrderByDisplayOrder(1L);
+    }
+
+    @Test
     void returnsDetailWithAllEvidences() {
         when(testCases.findById(10L)).thenReturn(Optional.of(testCase));
 

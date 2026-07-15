@@ -6,6 +6,12 @@
 
 ## DECISION NEEDED (사람 확인 대기)
 
+- 기획서 §17.2는 프로젝트 목록에 `미확인 모호성 수` 표시를 요구하지만, 현재 백엔드에는 §16.8의 `GET /api/projects/{projectId}/ambiguities`가 구현되어 있지 않고 `GET /api/projects` 응답에도 집계 필드가 없다. 목록 API를 구현할지 프로젝트 응답에 집계값을 추가할지 결정이 필요하다. 결정 전까지 프론트에는 해당 값만 `—`로 표시한다.
+→ 답변: 지금 단계에서는 별도 집계 API를 만들지 않는다. 핵심 흐름(업로드→분석→테스트
+    케이스 검토) 완성을 우선하고, 이 지표는 프론트에 `—`로 표시된 상태를 유지한다.
+    §16.8 Ambiguity 조회 API 및 목록 집계는 모호한 요구사항 화면(§17.9) 작업 시
+    함께 처리하는 것으로 미룬다.
+
 - T-31 실제 Jira REST API 연동은 대상 Jira가 Cloud인지 Data Center인지, 인증 방식과 API 버전, 프로젝트 키·Issue Type, 실연동/목업 구현체 선택 및 ADF 실패 시 폴백 활성화 기준이 기획서에 정의되지 않았다. 운영 대상과 설정 계약을 결정해야 한다.
 → 답변: 기획서 §26 작업17 및 §3.2 보류 범위 기준에 따라, T-31은 이번 MVP 사이클에서
     구현하지 않는다. T-29에서 만든 JiraClient 인터페이스 + MockJiraClient(목업 게시)로
@@ -25,6 +31,31 @@
     보류 범위로 남긴다.
 
 ---
+
+## [2026-07-15 17:17] T-37 로컬 업로드→분석 E2E 검증 및 상태 폴링 보완 — DONE
+- 구현 내용: 기획서 상태 `UPLOADED → PROCESSING → READY`를 각각 저장하고 프론트는 업로드 중 1.5초, 분석 중 3초 폴링한다. 모호성 연결의 Requirement 지연 로딩은 JOIN FETCH로 수정했으며, 결과 탭은 실패 재시도 데이터를 제외하고 문서별 최신 분석 TestCase만 표시한다.
+- 실제 검증: QA 로그인 성공, 프로젝트 2에 PDF 업로드 POST 200, 문서 3 `PROCESSING → READY` 확인. 프로젝트 1 문서 1 분석 작업 5는 `gpt-4o`로 `COMPLETED`, 해당 분석의 GENERATED TestCase 5건 조회 성공.
+- 생성/수정 파일: PlanningDocument.java, PlanningDocumentService.java, TestCaseRepository.java, AmbiguityGenerationService.java, 관련 테스트, frontend/src/App.tsx, frontend/src/App.test.tsx, plan/BACKLOG.md, PROGRESS.md
+- 테스트: `cd frontend && npm run build && npm test -- --run` 통과 (14개), `cd backend && ./gradlew test` 통과 (Gradle BUILD SUCCESSFUL)
+- 다음 작업자를 위한 메모: 실제 업로드의 `UPLOADED`는 즉시 `PROCESSING`으로 전환되어 100ms 외부 폴링에는 잡히지 않았고, `PROCESSING → READY`는 확인됐다. DB 저장 순서는 단위 테스트로 3단계 모두 검증한다.
+
+## [2026-07-15 16:44] T-36 프론트 프로젝트 상세·업로드·AI 분석 결과 화면 — DONE
+- 구현 내용: `/projects/:projectId`에서 프로젝트와 기획서 목록·처리 상태를 조회하고, 빈 목록은 역할별 안내/QA PDF 업로드 폼을 표시한다. READY 문서는 QA 분석 요청, 진행 상태 3초 폴링, 기존 결과 링크를 제공하며 §17.6의 4개 탭 중 테스트 케이스 간단 목록을 연결했다.
+- 생성/수정 파일: frontend/src/App.tsx, frontend/src/App.css, frontend/src/App.test.tsx, plan/BACKLOG.md, PROGRESS.md
+- 테스트: `cd frontend && npm run build && npm test -- --run` 통과 (Test Files 1 passed, Tests 13 passed)
+- 다음 작업자를 위한 메모: 기능 요약·요구사항·모호한 요구사항 탭은 다음 단계임을 표시하며 API 연결은 추가하지 않았다. 테스트 케이스 10컬럼 상세 검토는 기존 `/projects/:projectId/test-cases` 화면에서 다음 범위로 연결한다.
+
+## [2026-07-15 16:32] T-35 PostgreSQL 무필터 테스트 케이스 목록 조회 오류 수정 — DONE
+- 구현 내용: 필터 없는 프로젝트 테스트 케이스 목록은 nullable 조건이 없는 Spring Data 파생 쿼리로 조회하고, 필터가 있을 때만 기존 필터 쿼리를 사용하도록 분기했다.
+- 생성/수정 파일: TestCaseRepository.java, TestCaseQueryService.java, TestCaseQueryServiceTest.java, FullFlowIntegrationTest.java, plan/BACKLOG.md, PROGRESS.md
+- 테스트: `cd backend && ./gradlew test --no-daemon --console=plain --rerun-tasks` 통과 (Gradle BUILD SUCCESSFUL)
+- 다음 작업자를 위한 메모: 실행 중인 백엔드는 재시작해야 변경된 저장소 쿼리가 반영된다. FullFlowIntegrationTest는 생성한 자식 데이터를 종료 시 정리해 전체 테스트의 외래키 충돌을 방지한다.
+
+## [2026-07-15 16:22] T-34 프론트 프로젝트 목록·생성 화면 — DONE
+- 구현 내용: 로그인 후 `/projects` 랜딩에서 프로젝트명·장르·플랫폼·기획서 수·상태별 테스트 케이스 수·최근 분석일을 표시하고, QA에게만 생성 버튼과 `/projects/new` 폼을 제공한다. 생성 성공 시 목록 캐시를 갱신하고 목록으로 이동한다.
+- 생성/수정 파일: frontend/src/App.tsx, frontend/src/App.css, frontend/src/App.test.tsx, plan/BACKLOG.md, PROGRESS.md
+- 테스트: `cd frontend && npm run build && npm test -- --run` 통과 (Test Files 1 passed, Tests 10 passed)
+- 다음 작업자를 위한 메모: 미확인 모호성 수는 해당 목록/집계 API 결정 전까지 `—`로 표시한다. 프로젝트별 집계는 현재 기존 API를 병렬 호출하며, 목록 전용 집계 API가 추가되면 단일 요청으로 교체한다.
 
 ## [2026-07-15 14:43] T-33 README 작성 — DONE
 - 구현 내용: 기존 초기 설계 문서를 현재 구현과 설정에 맞는 프로젝트 README로 교체했다.

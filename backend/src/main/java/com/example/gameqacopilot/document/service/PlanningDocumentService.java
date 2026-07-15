@@ -104,6 +104,9 @@ public class PlanningDocumentService {
             Path storedPath = documentDirectory.resolve("original.pdf");
             Files.write(storedPath, content);
             document.uploaded(storedPath.toString(), pageCount);
+            documents.save(document);
+            document.processing();
+            documents.save(document);
             var processed = processor.process(content, documentDirectory);
             document.processed(processed.extractedText(), processed.pageContents());
             return PlanningDocumentResponse.from(documents.save(document));

@@ -1,7 +1,9 @@
-import { render, screen, within } from '@testing-library/react'
+import { cleanup, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it, vi } from 'vitest'
-import { DocumentViewer, EvidencePanel, LoginForm, OutputDownload, ProjectHome, TestCaseSheet, type TestCaseItem } from './App'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { DocumentViewer, EvidencePanel, LoginForm, OutputDownload, ProjectCreateForm, ProjectDetail, ProjectHome, TestCaseSheet, type Project, type ProjectDocument, type TestCaseItem } from './App'
+
+afterEach(cleanup)
 
 describe('role-based frontend skeleton', () => {
   it('validates the login form before submitting', async () => {
@@ -19,10 +21,36 @@ describe('role-based frontend skeleton', () => {
     const { rerender } = render(
       <ProjectHome user={{ id: 1, email: 'qa@example.com', name: 'QA', role: 'QA' }} />,
     )
-    expect(screen.getByRole('button', { name: '? ????' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '프로젝트 생성' })).toBeInTheDocument()
 
     rerender(<ProjectHome user={{ id: 2, email: 'user@example.com', name: 'User', role: 'USER' }} />)
-    expect(screen.queryByRole('button', { name: '? ????' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '프로젝트 생성' })).not.toBeInTheDocument()
+  })
+
+  it('renders every project summary column', () => {
+    const project: Project = { id: 1, name: '신작 RPG', description: '전투 시스템', gameGenre: 'RPG', platform: 'PC',
+      documentCount: 2, generatedCount: 5, approvedCount: 3, rejectedCount: 1, openAmbiguityCount: null,
+      lastAnalyzedAt: '2026-07-15T12:00:00' }
+    render(<ProjectHome user={{ id: 2, email: 'user@example.com', name: 'User', role: 'USER' }} projects={[project]} />)
+
+    expect(screen.getAllByRole('columnheader')).toHaveLength(9)
+    expect(screen.getByText('신작 RPG')).toBeInTheDocument()
+    expect(screen.getByText('RPG')).toBeInTheDocument()
+    expect(screen.getByText('—')).toBeInTheDocument()
+  })
+
+  it('validates and submits the project creation form', async () => {
+    const onSubmit = vi.fn().mockResolvedValue(undefined)
+    render(<ProjectCreateForm onSubmit={onSubmit} onCancel={vi.fn()} />)
+
+    await userEvent.click(screen.getByRole('button', { name: '생성' }))
+    expect(await screen.findByText('프로젝트명을 입력해 주세요.')).toBeInTheDocument()
+    await userEvent.type(screen.getByLabelText('프로젝트명'), '신작 RPG')
+    await userEvent.type(screen.getByLabelText('게임 장르'), 'RPG')
+    await userEvent.type(screen.getByLabelText('플랫폼'), 'PC')
+    await userEvent.click(screen.getByRole('button', { name: '생성' }))
+
+    expect(onSubmit).toHaveBeenCalledWith({ name: '신작 RPG', description: '', gameGenre: 'RPG', platform: 'PC' }, expect.anything())
   })
 
   it('shows PDF page text and moves between pages', async () => {
@@ -76,6 +104,72 @@ const testCase: TestCaseItem = {
   notes: ['AI 추론 포함', '기획 확인 필요'],
   requiresHumanReview: true,
 }
+
+const projectDocument: ProjectDocument = {
+  id: 4,
+  title: '전투 시스템 기획서',
+  originalFileName: 'combat.pdf',
+  pageCount: 8,
+  processingStatus: 'READY',
+  createdBy: 1,
+  createdAt: '2026-07-15T12:00:00',
+  analysis: null,
+}
+
+describe('project detail', () => {
+  const project = { id: 1, name: '신작 RPG', description: '전투 시스템', gameGenre: 'RPG', platform: 'PC' }
+
+  it('shows upload only to QA when the project has no documents', async () => {
+    const onUpload = vi.fn().mockResolvedValue(undefined)
+    const props = { project, documents: [], testCases: [], onUpload, onAnalyze: vi.fn(), onOpenDocument: vi.fn() }
+    const { rerender } = render(<ProjectDetail {...props} role="USER" />)
+    expect(screen.getByText('아직 업로드된 기획서가 없습니다.')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'PDF 업로드' })).not.toBeInTheDocument()
+
+    rerender(<ProjectDetail {...props} role="QA" />)
+    await userEvent.type(screen.getByLabelText('기획서 제목'), '전투 기획서')
+    await userEvent.upload(screen.getByLabelText('PDF 파일'), new File(['pdf'], 'combat.pdf', { type: 'application/pdf' }))
+    await userEvent.click(screen.getByRole('button', { name: 'PDF 업로드' }))
+    expect(onUpload).toHaveBeenCalled()
+  })
+
+  it('allows QA to request analysis for a ready document', async () => {
+    const onAnalyze = vi.fn()
+    const { rerender } = render(<ProjectDetail project={project} documents={[projectDocument]} testCases={[]} role="QA"
+      onUpload={vi.fn()} onAnalyze={onAnalyze} onOpenDocument={vi.fn()} />)
+
+    await userEvent.click(screen.getByRole('button', { name: 'AI 분석 요청' }))
+    expect(onAnalyze).toHaveBeenCalledWith(4)
+
+    rerender(<ProjectDetail project={project} documents={[projectDocument]} testCases={[]} role="QA"
+      analyzingDocumentId={4} onUpload={vi.fn()} onAnalyze={onAnalyze} onOpenDocument={vi.fn()} />)
+    expect(screen.getByRole('button', { name: 'AI 분석 진행 중' })).toBeDisabled()
+    expect(screen.getByText('분석 결과를 확인하는 중입니다.')).toBeInTheDocument()
+  })
+
+  it('shows analysis tabs and a simple test case list when results exist', () => {
+    render(<ProjectDetail project={project}
+      documents={[{ ...projectDocument, analysis: { id: 20, planningDocumentId: 4, status: 'COMPLETED',
+        requestedAt: '2026-07-15T12:00:00', completedAt: '2026-07-15T12:01:00' } }]}
+      testCases={[{ ...testCase, id: 100, analysisId: 19, testItem: '이전 실패 결과' }, testCase]} role="USER"
+      onUpload={vi.fn()} onAnalyze={vi.fn()} onOpenDocument={vi.fn()} />)
+
+    expect(screen.getByRole('link', { name: '테스트 케이스 보기' })).toBeInTheDocument()
+    expect(screen.getAllByRole('tab')).toHaveLength(4)
+    expect(screen.getByText(/TC 1\. 무료 뽑기 정상 사용/)).toBeInTheDocument()
+    expect(screen.queryByText(/이전 실패 결과/)).not.toBeInTheDocument()
+  })
+
+  it('shows the stored analysis failure reason and allows retry', () => {
+    render(<ProjectDetail project={project}
+      documents={[{ ...projectDocument, analysis: { id: 21, planningDocumentId: 4, status: 'FAILED',
+        requestedAt: '2026-07-15T12:00:00', completedAt: '2026-07-15T12:01:00', failureReason: 'model_not_found' } }]}
+      testCases={[]} role="QA" onUpload={vi.fn()} onAnalyze={vi.fn()} onOpenDocument={vi.fn()} />)
+
+    expect(screen.getByRole('alert')).toHaveTextContent('AI 분석 실패: model_not_found')
+    expect(screen.getByRole('button', { name: 'AI 분석 요청' })).toBeEnabled()
+  })
+})
 
 describe('test case sheet', () => {
   it('renders ten columns, evidence summary, and note tags', () => {
