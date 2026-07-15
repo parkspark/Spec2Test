@@ -16,7 +16,7 @@
 - 생성/수정 파일: backend/src/main/resources/prompts/v1.0/*.txt, PromptResourcesTest.java, plan/BACKLOG.md, PROGRESS.md
 - 테스트: `cd backend && ./gradlew test --no-daemon --console=plain --rerun-tasks` 전체 통과 (Gradle BUILD SUCCESSFUL)
 - 다음 작업자를 위한 메모: T-12부터 promptVersion은 v1.0을 사용하고 필요한 리소스를 조합한다.
-- 커밋 실패 — 사람이 수동 커밋 필요 (.git ACL 문제)
+- 커밋 실패 — 사람이 수동 커밋 필요 (.git ACL 문제) 사람이 수동 커밋 처리함
 
 ## [2026-07-15 09:28] 사람 개입 — T-09/T-10 커밋 정리
 - T-08 이후 T-09 자동 커밋이 누락되어 있었음 (원인: .git ACL 권한 문제로 추정)
