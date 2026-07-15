@@ -9,6 +9,13 @@
 
 ---
 
+## [2026-07-15 13:38] T-22 프론트 Evidence 연동 — DONE
+- 구현 내용: 테스트 케이스의 전체 Evidence를 조회하고 분석 작업에 연결된 PDF 문서의 해당 페이지로 이동하는 원문 패널을 구현했다.
+  여러 근거 선택, 페이지·섹션·유형·검증 상태·원문·선정 이유 표시를 제공하며 boundingBox가 있는 근거만 이미지 위에 하이라이트한다.
+- 생성/수정 파일: frontend/src/App.tsx, frontend/src/App.css, frontend/src/App.test.tsx, TestCaseResponse.java, TestCaseQueryServiceTest.java, plan/BACKLOG.md, PROGRESS.md
+- 테스트: `cd backend && ./gradlew test`, `cd frontend && npm run build && npm test -- --run` 통과 (Gradle BUILD SUCCESSFUL, Vitest 6개 통과)
+- 다음 작업자를 위한 메모: 다음 작업은 T-23 개별 승인/반려 API와 확인 모달이다. Evidence 좌표가 없으면 하이라이트 없이 페이지 이미지와 원문을 표시한다.
+
 ## [2026-07-15 13:34] T-21 프론트 테스트 시트 화면 — DONE
 - 구현 내용: 프로젝트별 테스트 케이스 API를 연결한 검토 경로를 추가하고 고정 순서 10컬럼 표, 셀 줄바꿈, 가로 스크롤 및 컬럼 너비 조절을 구현했다.
   행 선택 시 상세 API 결과를 패널에 표시하며 Evidence 요약과 비고 태그, QA 전용 승인·반려 버튼을 제공한다.

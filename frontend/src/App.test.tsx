@@ -1,7 +1,7 @@
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
-import { DocumentViewer, LoginForm, ProjectHome, TestCaseSheet, type TestCaseItem } from './App'
+import { DocumentViewer, EvidencePanel, LoginForm, ProjectHome, TestCaseSheet, type TestCaseItem } from './App'
 
 describe('role-based frontend skeleton', () => {
   it('validates the login form before submitting', async () => {
@@ -61,6 +61,7 @@ describe('role-based frontend skeleton', () => {
 
 const testCase: TestCaseItem = {
   id: 101,
+  analysisId: 20,
   displayOrder: 1,
   majorCategory: '무료 뽑기',
   middleCategory: '보상 지급',
@@ -70,7 +71,7 @@ const testCase: TestCaseItem = {
   preconditions: ['로그인되어 있다.'],
   testSteps: [{ stepNumber: 1, action: '무료 뽑기 버튼을 선택한다.', expectedResult: '보상이 지급된다.' }],
   expectedResults: ['무료 횟수가 0으로 변경된다.'],
-  evidenceSummary: { pageNumber: 7, evidenceType: 'INFERRED', sourceText: '무료 뽑기는 매일 초기화된다.' },
+  evidenceSummary: { pageNumber: 7, sectionTitle: '무료 뽑기 정책', evidenceType: 'INFERRED', sourceText: '무료 뽑기는 매일 초기화된다.' },
   notes: ['AI 추론 포함', '기획 확인 필요'],
   requiresHumanReview: true,
 }
@@ -80,7 +81,7 @@ describe('test case sheet', () => {
     render(<TestCaseSheet items={[testCase]} role="USER" onSelect={vi.fn()} />)
 
     expect(screen.getAllByRole('columnheader')).toHaveLength(10)
-    expect(screen.getByText(/p\.7 \/ INFERRED/)).toBeInTheDocument()
+    expect(screen.getByText(/p\.7 \/ 무료 뽑기 정책 \/ INFERRED/)).toBeInTheDocument()
     expect(screen.getByText('AI 추론 포함')).toBeInTheDocument()
     expect(screen.getByText('QA 검토 필수')).toBeInTheDocument()
   })
@@ -94,5 +95,29 @@ describe('test case sheet', () => {
     expect(within(container).getByRole('region', { name: '선택 테스트 케이스 상세' })).toHaveTextContent('무료 횟수가 0으로 변경된다.')
     expect(within(container).getByRole('button', { name: '승인' })).toBeDisabled()
     expect(within(container).getByRole('button', { name: '반려' })).toBeDisabled()
+  })
+
+
+  it('selects multiple evidences and highlights coordinates when present', async () => {
+    const onSelect = vi.fn()
+    render(<EvidencePanel
+      document={{ id: 4, title: '게임 기획서', originalFileName: 'game.pdf', pageCount: 7,
+        processingStatus: 'READY', createdBy: 1, createdAt: '2026-07-15T00:00:00' }}
+      page={{ pageNumber: 7, imageUrl: '/api/documents/4/pages/7/image', elements: [] }}
+      evidences={[
+        { evidenceType: 'EXPLICIT', verificationStatus: 'EXACT', pageNumber: 7,
+          sectionTitle: '무료 뽑기 정책', sourceText: '하루 한 번 무료 뽑기를 제공한다.',
+          sourceElementType: 'TEXT', boundingBox: { x: 0.1, y: 0.2, width: 0.5, height: 0.1 }, reason: '횟수가 명시됨' },
+        { evidenceType: 'INFERRED', verificationStatus: 'SIMILAR', pageNumber: 6,
+          sectionTitle: '보상', sourceText: '보상은 인벤토리에 지급한다.', sourceElementType: 'TEXT', reason: '지급 위치 근거' },
+      ]}
+      selectedIndex={0}
+      onSelect={onSelect}
+    />)
+
+    expect(screen.getByText('EXACT')).toBeInTheDocument()
+    expect(screen.getByLabelText('근거 영역 하이라이트')).toHaveStyle({ left: '10%', top: '20%' })
+    await userEvent.click(screen.getByRole('button', { name: '근거 2 (p.6)' }))
+    expect(onSelect).toHaveBeenCalledWith(1)
   })
 })

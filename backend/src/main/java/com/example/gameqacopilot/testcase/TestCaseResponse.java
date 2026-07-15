@@ -27,11 +27,13 @@ public record TestCaseResponse(
 
     public record EvidenceSummary(
             Integer pageNumber,
+            String sectionTitle,
             AiAnalysisResponse.EvidenceType evidenceType,
             String sourceText) {
         static EvidenceSummary from(AiAnalysisResponse.Evidence evidence) {
             return evidence == null ? null
-                    : new EvidenceSummary(evidence.pageNumber(), evidence.evidenceType(), evidence.sourceText());
+                    : new EvidenceSummary(evidence.pageNumber(), evidence.sectionTitle(),
+                            evidence.evidenceType(), evidence.sourceText());
         }
     }
 }

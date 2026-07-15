@@ -58,6 +58,7 @@ class TestCaseQueryServiceTest {
         assertThat(response.items()).singleElement().satisfies(item -> {
             assertThat(item.testItem()).isEqualTo("무료 뽑기 정상 사용");
             assertThat(item.evidenceSummary().pageNumber()).isEqualTo(7);
+            assertThat(item.evidenceSummary().sectionTitle()).isEqualTo("정책");
             assertThat(item.testSteps()).singleElement()
                     .satisfies(step -> assertThat(step.expectedResult()).isEqualTo("결과 표시"));
         });

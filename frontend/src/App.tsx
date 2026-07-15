@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import axios from 'axios'
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { useForm } from 'react-hook-form'
 import { Navigate, Route, Routes, useNavigate, useParams } from 'react-router-dom'
 import { z } from 'zod'
@@ -41,6 +41,7 @@ export type DocumentPage = {
 
 export type TestCaseItem = {
   id: number
+  analysisId: number
   displayOrder: number
   majorCategory: string
   middleCategory: string
@@ -50,10 +51,25 @@ export type TestCaseItem = {
   preconditions: string[]
   testSteps: Array<{ stepNumber: number; action: string; expectedResult?: string }>
   expectedResults: string[]
-  evidenceSummary: null | { pageNumber: number | null; evidenceType: string; sourceText: string }
+  evidenceSummary: null | { pageNumber: number | null; sectionTitle: string; evidenceType: string; sourceText: string }
+  evidences?: Evidence[]
   notes: string[]
   requiresHumanReview: boolean
 }
+
+export type Evidence = {
+  evidenceType: 'EXPLICIT' | 'INFERRED' | 'UNSUPPORTED'
+  verificationStatus: 'EXACT' | 'PARTIAL' | 'SIMILAR' | 'NOT_FOUND'
+  pageNumber: number
+  sectionTitle: string
+  sourceElementId?: string
+  sourceText: string
+  sourceElementType: 'TEXT' | 'TABLE' | 'IMAGE' | 'CAPTION'
+  boundingBox?: { x: number; y: number; width: number; height: number }
+  reason: string
+}
+
+type AnalysisJob = { planningDocumentId: number }
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL ?? 'http://localhost:8080',
@@ -202,9 +218,66 @@ function NoteTags({ testCase }: { testCase: TestCaseItem }) {
 function EvidenceSummary({ evidence }: { evidence: TestCaseItem['evidenceSummary'] }) {
   return evidence ? (
     <span className="evidence-summary">
-      p.{evidence.pageNumber ?? '-'} / {evidence.evidenceType}<br />“{evidence.sourceText}”
+      p.{evidence.pageNumber ?? '-'} / {evidence.sectionTitle} / {evidence.evidenceType}<br />“{evidence.sourceText}”
     </span>
   ) : <>근거 없음</>
+}
+
+export function EvidencePanel({
+  document,
+  page,
+  evidences,
+  selectedIndex,
+  onSelect,
+}: {
+  document: PlanningDocument
+  page: DocumentPage
+  evidences: Evidence[]
+  selectedIndex: number
+  onSelect: (index: number) => void
+}) {
+  const evidence = evidences[selectedIndex]
+  if (!evidence) return <section className="card evidence-panel"><p>연결된 근거가 없습니다.</p></section>
+
+  return (
+    <section className="card evidence-panel" aria-label="Evidence 원문">
+      <div className="evidence-selectors" aria-label="근거 선택">
+        {evidences.map((item, index) => (
+          <Button
+            key={`${item.pageNumber}-${item.sourceElementId ?? index}`}
+            variant={index === selectedIndex ? 'default' : 'outline'}
+            onClick={() => onSelect(index)}
+            aria-pressed={index === selectedIndex}
+          >
+            근거 {index + 1} (p.{item.pageNumber})
+          </Button>
+        ))}
+      </div>
+
+      <div className="evidence-preview">
+        <img src={`${apiBaseUrl}${page.imageUrl}`} alt={`${document.title} Evidence ${page.pageNumber} 페이지`} />
+        {evidence.boundingBox && <span
+          className="evidence-highlight"
+          aria-label="근거 영역 하이라이트"
+          style={{
+            left: `${evidence.boundingBox.x * 100}%`,
+            top: `${evidence.boundingBox.y * 100}%`,
+            width: `${evidence.boundingBox.width * 100}%`,
+            height: `${evidence.boundingBox.height * 100}%`,
+          }}
+        />}
+      </div>
+
+      <dl>
+        <dt>페이지</dt><dd>{evidence.pageNumber}</dd>
+        <dt>섹션</dt><dd>{evidence.sectionTitle}</dd>
+        <dt>근거 유형</dt><dd>{evidence.evidenceType}</dd>
+        <dt>원문 검증</dt><dd>{evidence.verificationStatus}</dd>
+        <dt>원문</dt><dd className="evidence-source">“{evidence.sourceText}”</dd>
+        <dt>선정 이유</dt><dd>{evidence.reason}</dd>
+      </dl>
+    </section>
+  )
 }
 
 export function TestCaseSheet({
@@ -212,11 +285,13 @@ export function TestCaseSheet({
   selected,
   role,
   onSelect,
+  evidencePanel,
 }: {
   items: TestCaseItem[]
   selected?: TestCaseItem
   role: User['role']
   onSelect: (id: number) => void
+  evidencePanel?: ReactNode
 }) {
   return (
     <main className="test-sheet-shell">
@@ -257,6 +332,7 @@ export function TestCaseSheet({
         </table>
       </section>
 
+      <div className="review-detail-layout">
       <section className="card test-case-detail" aria-label="선택 테스트 케이스 상세">
         {selected ? (
           <>
@@ -279,6 +355,8 @@ export function TestCaseSheet({
           </>
         ) : <p>행을 선택하면 전체 내용을 확인할 수 있습니다.</p>}
       </section>
+      {evidencePanel}
+      </div>
     </main>
   )
 }
@@ -307,6 +385,7 @@ function TestCaseScreen({ user }: { user: User }) {
   const { projectId } = useParams()
   const id = Number(projectId)
   const [selectedId, setSelectedId] = useState<number>()
+  const [evidenceIndex, setEvidenceIndex] = useState(0)
   const listQuery = useQuery({
     queryKey: ['projects', id, 'test-cases'],
     queryFn: async () => (await api.get<ApiResponse<{ items: TestCaseItem[] }>>(`/api/projects/${id}/test-cases`)).data.data.items,
@@ -317,10 +396,48 @@ function TestCaseScreen({ user }: { user: User }) {
     queryFn: async () => (await api.get<ApiResponse<TestCaseItem>>(`/api/test-cases/${selectedId}`)).data.data,
     enabled: selectedId !== undefined,
   })
+  const evidenceQuery = useQuery({
+    queryKey: ['test-cases', selectedId, 'evidences'],
+    queryFn: async () => (await api.get<ApiResponse<Evidence[]>>(`/api/test-cases/${selectedId}/evidences`)).data.data,
+    enabled: selectedId !== undefined,
+  })
+  const analysisQuery = useQuery({
+    queryKey: ['analyses', detailQuery.data?.analysisId],
+    queryFn: async () => (await api.get<ApiResponse<AnalysisJob>>(`/api/analyses/${detailQuery.data!.analysisId}`)).data.data,
+    enabled: detailQuery.data !== undefined,
+  })
+  const documentQuery = useQuery({
+    queryKey: ['documents', analysisQuery.data?.planningDocumentId],
+    queryFn: async () => (await api.get<ApiResponse<PlanningDocument>>(`/api/documents/${analysisQuery.data!.planningDocumentId}`)).data.data,
+    enabled: analysisQuery.data !== undefined,
+  })
+  const selectedEvidence = evidenceQuery.data?.[evidenceIndex]
+  const pageQuery = useQuery({
+    queryKey: ['documents', analysisQuery.data?.planningDocumentId, 'pages', selectedEvidence?.pageNumber],
+    queryFn: async () => (await api.get<ApiResponse<DocumentPage>>(
+      `/api/documents/${analysisQuery.data!.planningDocumentId}/pages/${selectedEvidence!.pageNumber}`,
+    )).data.data,
+    enabled: analysisQuery.data !== undefined && selectedEvidence !== undefined,
+  })
 
   if (listQuery.isPending) return <main className="loading">테스트 케이스 불러오는 중</main>
   if (listQuery.isError) return <main className="loading">테스트 케이스를 불러오지 못했습니다.</main>
-  return <TestCaseSheet items={listQuery.data} selected={detailQuery.data} role={user.role} onSelect={setSelectedId} />
+  let evidencePanel: ReactNode
+  if (selectedId !== undefined) {
+    if (evidenceQuery.isError || analysisQuery.isError || documentQuery.isError || pageQuery.isError) {
+      evidencePanel = <section className="card evidence-panel"><p>Evidence 원문을 불러오지 못했습니다.</p></section>
+    } else if (evidenceQuery.data?.length === 0) {
+      evidencePanel = <section className="card evidence-panel"><p>연결된 근거가 없습니다.</p></section>
+    } else if (documentQuery.data && pageQuery.data && evidenceQuery.data) {
+      evidencePanel = <EvidencePanel document={documentQuery.data} page={pageQuery.data}
+        evidences={evidenceQuery.data} selectedIndex={evidenceIndex} onSelect={setEvidenceIndex} />
+    } else {
+      evidencePanel = <section className="card evidence-panel"><p>Evidence 원문 불러오는 중</p></section>
+    }
+  }
+
+  return <TestCaseSheet items={listQuery.data} selected={detailQuery.data} role={user.role}
+    onSelect={(testCaseId) => { setEvidenceIndex(0); setSelectedId(testCaseId) }} evidencePanel={evidencePanel} />
 }
 
 function App() {
