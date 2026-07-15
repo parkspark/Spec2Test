@@ -8,6 +8,15 @@
 
 - T-26 CSV 생성 API는 `projectId`만 받지만 `Output.planning_document_id`는 NOT NULL 단일 FK다. 프로젝트에 여러 기획서의 승인 테스트 케이스가 있을 때 (1) 분석/기획서 ID를 요청에 추가할지, (2) 기획서별 Output을 여러 개 만들지, (3) 특정 기획서 선택 규칙을 둘지 결정이 필요하다.
 - T-27 Markdown 생성 API도 `projectId`만 받고 §18.2 본문은 기획서명을 단수로 표시하며 `Output.planning_document_id`는 NOT NULL 단일 FK다. 여러 기획서가 있을 때 Markdown 대상 범위와 Output 기록 기준 결정이 필요하다.
+→ 답변: 별도 ID를 요청에 추가하지 않는다. 해당 프로젝트의 PlanningDocument 중
+    processingStatus=READY인 것을 createdAt 내림차순으로 정렬해 가장 최근 것 하나를
+    산출물 대상으로 고정한다. READY 상태 기획서가 없으면 400을 반환하고
+    Output을 생성하지 않는다.
+    - T-26 CSV: 선택된 기획서에 속한 APPROVED 테스트 케이스만 포함
+    - T-27 Markdown: 선택된 기획서에 속한 모호한 요구사항만 포함
+    - Output.planning_document_id는 선택된 기획서 ID로 저장 (스키마 변경 없음)
+    이 규칙은 MVP 범위 내 단순화이며, 여러 기획서를 사용자가 직접 선택하는 기능은
+    보류 범위로 남긴다.
 
 ---
 

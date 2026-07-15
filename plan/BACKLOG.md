@@ -52,8 +52,9 @@
 ## Phase 6. 산출물 출력
 - [x] T-24 Output + Lats_Loop_Log 테이블 마이그레이션 (기획서 §15.8~15.9)
 - [x] T-25 Actor–Evaluator 루프 프레임워크 (통과 기준, 최대 3회, 서킷 브레이커, 로그 기록 — 기획서 §10.7, §22.3)
-- [ ] T-26 승인 테스트 케이스 CSV 생성·다운로드 (10컬럼, RFC4180, UTF-8 BOM — 기획서 §18.1, §16.9) — BLOCKED: 프로젝트에 여러 기획서가 있을 때 필수 단일 Output.planning_document_id 결정 기준이 없음
-- [ ] T-27 모호 요구사항 Markdown 생성·다운로드 (기획서 §18.2) — BLOCKED: 프로젝트에 여러 기획서가 있을 때 Markdown 대상과 필수 단일 Output.planning_document_id 결정 기준이 없음
+- [ ] T-26 승인 테스트 케이스 CSV 생성·다운로드 (10컬럼, RFC4180, UTF-8 BOM — 기획서 §18.1, §16.9) → 재개 지침: 대상 기획서는 projectId 기준 READY 상태 중 최신 것 1개로 고정
+        (PROGRESS.md DECISION NEEDED 답변 참고). READY 기획서 없으면 400 반환.
+- [ ] T-27 모호 요구사항 Markdown 생성·다운로드 (기획서 §18.2) → 재개 지침: T-26과 동일한 기획서 선택 규칙 적용 (PROGRESS.md DECISION NEEDED 답변 참고).
 - [ ] T-28 프론트 산출물 화면 + Lats_Loop_Log 진행 상태 표시 (기획서 §17.10) — BLOCKED: T-26/T-27 생성·다운로드 API의 대상 기획서 결정 대기
 
 ## Phase 7. Jira 연동
