@@ -6,8 +6,20 @@
 
 ## DECISION NEEDED (사람 확인 대기)
 
+- T-26 CSV 생성 API는 `projectId`만 받지만 `Output.planning_document_id`는 NOT NULL 단일 FK다. 프로젝트에 여러 기획서의 승인 테스트 케이스가 있을 때 (1) 분석/기획서 ID를 요청에 추가할지, (2) 기획서별 Output을 여러 개 만들지, (3) 특정 기획서 선택 규칙을 둘지 결정이 필요하다.
+- T-27 Markdown 생성 API도 `projectId`만 받고 §18.2 본문은 기획서명을 단수로 표시하며 `Output.planning_document_id`는 NOT NULL 단일 FK다. 여러 기획서가 있을 때 Markdown 대상 범위와 Output 기록 기준 결정이 필요하다.
 
 ---
+
+## [2026-07-15 14:01] T-29 JiraClient 인터페이스 + 목업 게시 + Issue 미리보기 API — DONE
+- 구현 내용: Jira 호출을 JiraClient로 추상화하고 로컬 Key·URL을 반환하는 MockJiraClient를 추가했다.
+  모호성의 질문·영향·Evidence·관련 요구사항을 기획서 §19.3 형식으로 조립하는 미리보기 API를 구현하고, 정확한 관련 요구사항 보존을 위해 JSONB 필드를 Flyway V8로 추가했다.
+- 생성/수정 파일: jira 패키지(JiraClient, MockJiraClient, 미리보기 DTO·서비스·컨트롤러), Ambiguity.java, AmbiguityGenerationService.java, Requirement.java, V8__add_ambiguity_related_requirements.sql, JiraIssuePreviewServiceTest.java, AmbiguityGenerationServiceTest.java, plan/BACKLOG.md, PROGRESS.md
+- 테스트: `cd backend && ./gradlew test` 전체 52개 통과 (Gradle BUILD SUCCESSFUL)
+- 다음 작업자를 위한 메모: T-30에서 QA의 명시적 POST 요청에만 JiraClient.publish를 호출하고 Output 기록·중복 차단·Ambiguity 상태 갱신을 한 트랜잭션 경계로 연결한다. T-26/T-27은 다중 기획서의 Output FK 기준 결정 대기 상태다.
+
+## [2026-07-15 14:00] T-28 프론트 산출물 화면 + Lats_Loop_Log 진행 상태 표시 — BLOCKED
+- 차단 사유: 화면이 호출해야 할 T-26/T-27 생성·다운로드 API가 대상 기획서 결정 대기 상태다. 구현되지 않은 기능을 동작하는 것처럼 표시할 수 없어 선행 결정과 API 구현 후 진행해야 한다.
 
 ## [2026-07-15 13:52] T-25 Actor–Evaluator 루프 프레임워크 — DONE
 - 구현 내용: 호출자가 지정한 통과 점수로 Actor 초안을 Evaluator가 평가하고, 피드백을 반영해 최대 3회 재생성하는 루프를 구현했다.

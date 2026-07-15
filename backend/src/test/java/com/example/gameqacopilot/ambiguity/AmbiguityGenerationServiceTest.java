@@ -61,6 +61,7 @@ class AmbiguityGenerationServiceTest {
         assertThat(saved.getValue()).asList().singleElement().satisfies(value -> {
             var ambiguity = (Ambiguity) value;
             assertThat(ambiguity.getStatus()).isEqualTo(AmbiguityStatus.OPEN);
+            assertThat(ambiguity.getRelatedRequirementIds()).contains(\u0022REQ-001\u0022);
             assertThat(ambiguity.getEvidences()).contains(\u0022sourceText\u0022);
         });
         var notes = ArgumentCaptor.forClass(String.class);

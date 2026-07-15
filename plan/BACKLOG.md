@@ -52,12 +52,12 @@
 ## Phase 6. 산출물 출력
 - [x] T-24 Output + Lats_Loop_Log 테이블 마이그레이션 (기획서 §15.8~15.9)
 - [x] T-25 Actor–Evaluator 루프 프레임워크 (통과 기준, 최대 3회, 서킷 브레이커, 로그 기록 — 기획서 §10.7, §22.3)
-- [ ] T-26 승인 테스트 케이스 CSV 생성·다운로드 (10컬럼, RFC4180, UTF-8 BOM — 기획서 §18.1, §16.9)
-- [ ] T-27 모호 요구사항 Markdown 생성·다운로드 (기획서 §18.2)
-- [ ] T-28 프론트 산출물 화면 + Lats_Loop_Log 진행 상태 표시 (기획서 §17.10)
+- [ ] T-26 승인 테스트 케이스 CSV 생성·다운로드 (10컬럼, RFC4180, UTF-8 BOM — 기획서 §18.1, §16.9) — BLOCKED: 프로젝트에 여러 기획서가 있을 때 필수 단일 Output.planning_document_id 결정 기준이 없음
+- [ ] T-27 모호 요구사항 Markdown 생성·다운로드 (기획서 §18.2) — BLOCKED: 프로젝트에 여러 기획서가 있을 때 Markdown 대상과 필수 단일 Output.planning_document_id 결정 기준이 없음
+- [ ] T-28 프론트 산출물 화면 + Lats_Loop_Log 진행 상태 표시 (기획서 §17.10) — BLOCKED: T-26/T-27 생성·다운로드 API의 대상 기획서 결정 대기
 
 ## Phase 7. Jira 연동
-- [ ] T-29 JiraClient 인터페이스 + MockJiraClient(목업 게시) + Issue 미리보기 API (기획서 §19.2)
+- [x] T-29 JiraClient 인터페이스 + MockJiraClient(목업 게시) + Issue 미리보기 API (기획서 §19.2)
 - [ ] T-30 Jira Issue 생성 플로우: 중복 방지, Output 기록, Ambiguity 상태 갱신, 실패 재시도 (기획서 §19)
 - [ ] T-31 (선택/잔여 일정) 실제 Jira REST API 연동 구현체 교체
 

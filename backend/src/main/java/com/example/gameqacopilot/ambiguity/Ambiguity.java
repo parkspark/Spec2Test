@@ -29,6 +29,7 @@ public class Ambiguity {
     @Column(columnDefinition = \u0022TEXT\u0022) private String impact;
     private String severity;
     @Enumerated(EnumType.STRING) private AmbiguityStatus status;
+    @JdbcTypeCode(SqlTypes.JSON) @Column(columnDefinition = \u0022jsonb\u0022) private String relatedRequirementIds;
     @JdbcTypeCode(SqlTypes.JSON) @Column(columnDefinition = \u0022jsonb\u0022) private String evidences;
     private String jiraIssueKey;
     private String jiraIssueUrl;
@@ -37,7 +38,8 @@ public class Ambiguity {
 
     protected Ambiguity() {}
 
-    public Ambiguity(AnalysisJob job, AiAnalysisResponse.Ambiguity value, String evidences) {
+    public Ambiguity(AnalysisJob job, AiAnalysisResponse.Ambiguity value,
+            String relatedRequirementIds, String evidences) {
         this.planningDocument = job.getPlanningDocument();
         this.analysisJob = job;
         this.externalAmbiguityId = value.ambiguityId();
@@ -50,14 +52,23 @@ public class Ambiguity {
         this.impact = value.impact();
         this.severity = value.severity();
         this.status = AmbiguityStatus.OPEN;
+        this.relatedRequirementIds = relatedRequirementIds;
         this.evidences = evidences;
         this.createdAt = LocalDateTime.now();
     }
 
     public String getExternalAmbiguityId() { return externalAmbiguityId; }
+    public Long getAnalysisJobId() { return analysisJob.getId(); }
+    public String getMajorCategory() { return majorCategory; }
+    public String getMiddleCategory() { return middleCategory; }
+    public String getMinorCategory() { return minorCategory; }
+    public String getTitle() { return title; }
+    public String getDescription() { return description; }
     public String getQuestion() { return question; }
+    public String getImpact() { return impact; }
     public String getSeverity() { return severity; }
     public AmbiguityStatus getStatus() { return status; }
+    public String getRelatedRequirementIds() { return relatedRequirementIds; }
     public String getEvidences() { return evidences; }
     public Integer getDocumentPageCount() { return planningDocument.getPageCount(); }
 }

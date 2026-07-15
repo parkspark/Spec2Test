@@ -66,8 +66,9 @@ public class AmbiguityGenerationService {
                             .responseEntity(AmbiguityGenerationResponse.class),
                     value -> validate(value.entity(), byExternalId));
             ambiguities.saveAll(response.entity().ambiguities().stream()
-                    .map(value -> new Ambiguity(job, value, json(evidenceVerifier.verify(value.evidences(),
-                            input.document().pageContents(), input.document().pageCount())))).toList());
+                    .map(value -> new Ambiguity(job, value, json(value.relatedRequirementIds()),
+                            json(evidenceVerifier.verify(value.evidences(), input.document().pageContents(),
+                                    input.document().pageCount())))).toList());
             linkTestCases(jobId, response.entity().ambiguities());
             var chatResponse = response.response();
             var usage = chatResponse.getMetadata().getUsage();

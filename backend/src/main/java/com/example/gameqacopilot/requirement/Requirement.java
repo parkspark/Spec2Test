@@ -55,6 +55,7 @@ public class Requirement {
     public String getMajorCategory() { return majorCategory; }
     public String getMiddleCategory() { return middleCategory; }
     public String getMinorCategory() { return minorCategory; }
+    public String getTitle() { return title; }
     public String getEvidences() { return evidences; }
     public Integer getDocumentPageCount() { return analysisJob.getPlanningDocument().getPageCount(); }
 }
