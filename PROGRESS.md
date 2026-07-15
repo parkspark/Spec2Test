@@ -28,6 +28,12 @@
 
 ---
 
+## [2026-07-15 16:44] T-36 프론트 프로젝트 상세·업로드·AI 분석 결과 화면 — DONE
+- 구현 내용: `/projects/:projectId`에서 프로젝트와 기획서 목록·처리 상태를 조회하고, 빈 목록은 역할별 안내/QA PDF 업로드 폼을 표시한다. READY 문서는 QA 분석 요청, 진행 상태 3초 폴링, 기존 결과 링크를 제공하며 §17.6의 4개 탭 중 테스트 케이스 간단 목록을 연결했다.
+- 생성/수정 파일: frontend/src/App.tsx, frontend/src/App.css, frontend/src/App.test.tsx, plan/BACKLOG.md, PROGRESS.md
+- 테스트: `cd frontend && npm run build && npm test -- --run` 통과 (Test Files 1 passed, Tests 13 passed)
+- 다음 작업자를 위한 메모: 기능 요약·요구사항·모호한 요구사항 탭은 다음 단계임을 표시하며 API 연결은 추가하지 않았다. 테스트 케이스 10컬럼 상세 검토는 기존 `/projects/:projectId/test-cases` 화면에서 다음 범위로 연결한다.
+
 ## [2026-07-15 16:32] T-35 PostgreSQL 무필터 테스트 케이스 목록 조회 오류 수정 — DONE
 - 구현 내용: 필터 없는 프로젝트 테스트 케이스 목록은 nullable 조건이 없는 Spring Data 파생 쿼리로 조회하고, 필터가 있을 때만 기존 필터 쿼리를 사용하도록 분기했다.
 - 생성/수정 파일: TestCaseRepository.java, TestCaseQueryService.java, TestCaseQueryServiceTest.java, FullFlowIntegrationTest.java, plan/BACKLOG.md, PROGRESS.md

@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query'
 import axios from 'axios'
 import { useState, type ReactNode } from 'react'
 import { useForm } from 'react-hook-form'
@@ -40,6 +40,7 @@ export type PlanningDocument = {
   processingStatus: 'UPLOADED' | 'PROCESSING' | 'READY' | 'FAILED'
   createdBy: number
   createdAt: string
+  failureReason?: string | null
 }
 
 export type DocumentPage = {
@@ -87,7 +88,16 @@ export type Evidence = {
   reason: string
 }
 
-type AnalysisJob = { planningDocumentId: number }
+export type AnalysisJob = {
+  id: number
+  planningDocumentId: number
+  status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED'
+  requestedAt: string
+  completedAt: string | null
+  failureReason?: string | null
+}
+
+export type ProjectDocument = PlanningDocument & { analysis: AnalysisJob | null }
 
 export type Output = {
   id: number
@@ -129,6 +139,15 @@ const projectSchema = z.object({
 })
 
 type ProjectValues = z.infer<typeof projectSchema>
+
+const uploadSchema = z.object({
+  title: z.string().trim().min(1, '기획서 제목을 입력해 주세요.'),
+  file: z.custom<FileList>((files) => Boolean((files as FileList | undefined)?.length), 'PDF 파일을 선택해 주세요.')
+    .refine((files) => files[0]?.type === 'application/pdf', 'PDF 파일만 업로드할 수 있습니다.'),
+  analyzeAfterUpload: z.boolean(),
+})
+
+type UploadValues = z.infer<typeof uploadSchema>
 
 export function LoginForm({
   onLogin,
@@ -177,10 +196,12 @@ export function ProjectHome({
   user,
   projects = [],
   onCreate = () => undefined,
+  onOpen = () => undefined,
 }: {
   user: User
   projects?: Project[]
   onCreate?: () => void
+  onOpen?: (id: number) => void
 }) {
   return (
     <main className="page-shell">
@@ -205,7 +226,8 @@ export function ProjectHome({
               {['프로젝트명', '게임 장르', '플랫폼', '기획서', '생성', '승인', '반려', '미확인 모호성', '최근 분석일'].map((label) => <th key={label}>{label}</th>)}
             </tr></thead>
             <tbody>{projects.map((project) => <tr key={project.id}>
-              <td><strong>{project.name}</strong>{project.description && <small>{project.description}</small>}</td>
+              <td><button className="link-button" onClick={() => onOpen(project.id)}><strong>{project.name}</strong></button>
+                {project.description && <small>{project.description}</small>}</td>
               <td>{project.gameGenre || '-'}</td>
               <td>{project.platform || '-'}</td>
               <td>{project.documentCount}</td>
@@ -262,6 +284,109 @@ export function ProjectCreateForm({
       </form>
     </main>
   )
+}
+
+export function DocumentUploadForm({
+  onSubmit,
+  isSubmitting,
+  errorMessage,
+}: {
+  onSubmit: (values: UploadValues) => Promise<void>
+  isSubmitting?: boolean
+  errorMessage?: string
+}) {
+  const { register, handleSubmit, formState: { errors } } = useForm<UploadValues>({
+    resolver: zodResolver(uploadSchema),
+    defaultValues: { title: '', analyzeAfterUpload: false },
+  })
+  return <form className="card upload-form" onSubmit={handleSubmit(onSubmit)} noValidate>
+    <div><p className="eyebrow">PLANNING DOCUMENT</p><h2>기획서 PDF 업로드</h2></div>
+    <div className="form-field"><label htmlFor="document-title">기획서 제목</label>
+      <Input id="document-title" {...register('title')} />
+      {errors.title && <span className="error">{errors.title.message}</span>}
+    </div>
+    <div className="form-field"><label htmlFor="document-file">PDF 파일</label>
+      <Input id="document-file" type="file" accept="application/pdf,.pdf" {...register('file')} />
+      {errors.file && <span className="error">{errors.file.message}</span>}
+    </div>
+    <label className="checkbox-field"><input type="checkbox" {...register('analyzeAfterUpload')} /> 업로드 후 AI 분석 시작</label>
+    {errorMessage && <p className="error" role="alert">{errorMessage}</p>}
+    <Button type="submit" disabled={isSubmitting}>{isSubmitting ? '업로드 중' : 'PDF 업로드'}</Button>
+  </form>
+}
+
+export function ProjectDetail({
+  project,
+  documents,
+  testCases,
+  role,
+  uploading,
+  analyzingDocumentId,
+  uploadError,
+  analysisError,
+  onUpload,
+  onAnalyze,
+  onOpenDocument,
+}: {
+  project: ProjectApiItem
+  documents: ProjectDocument[]
+  testCases: TestCaseItem[]
+  role: User['role']
+  uploading?: boolean
+  analyzingDocumentId?: number
+  uploadError?: string
+  analysisError?: string
+  onUpload: (values: UploadValues) => Promise<void>
+  onAnalyze: (documentId: number) => void
+  onOpenDocument: (documentId: number) => void
+}) {
+  const [activeTab, setActiveTab] = useState('테스트 케이스')
+  const tabs = ['기능 요약', '요구사항', '테스트 케이스', '모호한 요구사항']
+  return <main className="page-shell project-detail-shell">
+    <header><div><p className="eyebrow">PROJECT</p><h1>{project.name}</h1>
+      <p>{project.gameGenre || '-'} · {project.platform || '-'}</p></div></header>
+
+    {documents.length === 0 ? role === 'QA' ? (
+      <DocumentUploadForm onSubmit={onUpload} isSubmitting={uploading} errorMessage={uploadError} />
+    ) : (
+      <section className="card empty-state"><h2>아직 업로드된 기획서가 없습니다.</h2></section>
+    ) : (
+      <section className="document-list" aria-label="기획서 목록">
+        {documents.map((document) => {
+          const documentTestCases = document.analysis
+            ? testCases.filter((testCase) => testCase.analysisId === document.analysis?.id)
+            : []
+          const analyzing = analyzingDocumentId === document.id || ['PENDING', 'PROCESSING'].includes(document.analysis?.status ?? '')
+          return <article className="card document-card" key={document.id}>
+            <div><button className="link-button" onClick={() => onOpenDocument(document.id)}><h2>{document.title}</h2></button>
+              <p>{document.originalFileName} · {document.pageCount}페이지 · {new Date(document.createdAt).toLocaleDateString('ko-KR')}</p></div>
+            <span className={`status-badge status-${document.processingStatus.toLowerCase()}`}>{document.processingStatus}</span>
+            {document.failureReason && <p className="error">{document.failureReason}</p>}
+            {document.processingStatus === 'READY' && <div className="document-actions">
+              {documentTestCases.length > 0 ? <a href="#analysis-results">테스트 케이스 보기</a>
+                : role === 'QA' && <Button disabled={analyzingDocumentId !== undefined || analyzing}
+                    onClick={() => onAnalyze(document.id)}>{analyzing ? 'AI 분석 진행 중' : 'AI 분석 요청'}</Button>}
+              {analyzing && <span>분석 결과를 확인하는 중입니다.</span>}
+            </div>}
+          </article>
+        })}
+        {analysisError && <p className="error" role="alert">{analysisError}</p>}
+      </section>
+    )}
+
+    {testCases.length > 0 && <section id="analysis-results" className="card analysis-results">
+      <div className="analysis-tabs" role="tablist" aria-label="AI 분석 결과">
+        {tabs.map((tab) => <button key={tab} role="tab" aria-selected={activeTab === tab}
+          onClick={() => setActiveTab(tab)}>{tab}</button>)}
+      </div>
+      {activeTab === '테스트 케이스' ? <div className="simple-test-list">
+        {testCases.map((testCase) => <article key={testCase.id}>
+          <strong>TC {testCase.displayOrder}. {testCase.testItem}</strong>
+          <span>{testCase.majorCategory} / {testCase.middleCategory} / {testCase.minorCategory} · {testCase.status}</span>
+        </article>)}
+      </div> : <p className="tab-placeholder">{activeTab} 탭은 다음 단계에서 제공합니다.</p>}
+    </section>}
+  </main>
 }
 
 export function DocumentViewer({
@@ -773,7 +898,8 @@ function ProjectScreen({ user }: { user: User }) {
   const projects = useQuery({ queryKey: ['projects'], queryFn: loadProjects })
   if (projects.isPending) return <main className="loading">프로젝트 불러오는 중</main>
   if (projects.isError) return <main className="loading">프로젝트를 불러오지 못했습니다.</main>
-  return <ProjectHome user={user} projects={projects.data} onCreate={() => navigate('/projects/new')} />
+  return <ProjectHome user={user} projects={projects.data} onCreate={() => navigate('/projects/new')}
+    onOpen={(projectId) => navigate(`/projects/${projectId}`)} />
 }
 
 function ProjectCreateScreen() {
@@ -791,6 +917,83 @@ function ProjectCreateScreen() {
     onCancel={() => navigate('/projects')}
     errorMessage={create.isError ? '프로젝트를 생성하지 못했습니다.' : undefined}
   />
+}
+
+function ProjectDetailScreen({ user }: { user: User }) {
+  const { projectId } = useParams()
+  const id = Number(projectId)
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
+  const project = useQuery({
+    queryKey: ['projects', id],
+    queryFn: async () => (await api.get<ApiResponse<ProjectApiItem>>(`/api/projects/${id}`)).data.data,
+    enabled: Number.isInteger(id),
+  })
+  const documents = useQuery({
+    queryKey: ['projects', id, 'documents'],
+    queryFn: async () => (await api.get<ApiResponse<PlanningDocument[]>>(`/api/projects/${id}/documents`)).data.data,
+    enabled: Number.isInteger(id),
+  })
+  const testCases = useQuery({
+    queryKey: ['projects', id, 'test-cases'],
+    queryFn: async () => (await api.get<ApiResponse<{ items: TestCaseItem[] }>>(`/api/projects/${id}/test-cases`)).data.data.items,
+    enabled: Number.isInteger(id),
+  })
+  const analyses = useQueries({ queries: (documents.data ?? []).map((document) => ({
+    queryKey: ['documents', document.id, 'analyses', 'latest'],
+    queryFn: async (): Promise<AnalysisJob | null> => {
+      try {
+        return (await api.get<ApiResponse<AnalysisJob>>(`/api/documents/${document.id}/analyses/latest`)).data.data
+      } catch (error) {
+        if (axios.isAxiosError(error) && error.response?.status === 404) return null
+        throw error
+      }
+    },
+    retry: false,
+    refetchInterval: (query: { state: { data?: AnalysisJob | null } }) =>
+      ['PENDING', 'PROCESSING'].includes(query.state.data?.status ?? '') ? 3000 : false,
+  })) })
+  const refresh = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ['projects', id, 'documents'] }),
+      queryClient.invalidateQueries({ queryKey: ['projects', id, 'test-cases'] }),
+      queryClient.invalidateQueries({ queryKey: ['documents'] }),
+      queryClient.invalidateQueries({ queryKey: ['projects'] }),
+    ])
+  }
+  const upload = useMutation({
+    mutationFn: async (values: UploadValues) => {
+      const form = new FormData()
+      form.append('title', values.title)
+      form.append('file', values.file[0])
+      const document = (await api.post<ApiResponse<PlanningDocument>>(`/api/projects/${id}/documents`, form)).data.data
+      if (values.analyzeAfterUpload && document.processingStatus === 'READY') {
+        await api.post<ApiResponse<AnalysisJob>>(`/api/documents/${document.id}/analyses`)
+      }
+    },
+    onSuccess: refresh,
+  })
+  const analysis = useMutation({
+    mutationFn: async (documentId: number) =>
+      (await api.post<ApiResponse<AnalysisJob>>(`/api/documents/${documentId}/analyses`)).data.data,
+    onSuccess: refresh,
+  })
+
+  if (project.isPending || documents.isPending || testCases.isPending) return <main className="loading">프로젝트 상세 불러오는 중</main>
+  if (project.isError || documents.isError || testCases.isError || analyses.some((query) => query.isError)) {
+    return <main className="loading">프로젝트 상세를 불러오지 못했습니다.</main>
+  }
+  const projectDocuments = documents.data.map((document, index) => ({
+    ...document,
+    analysis: analyses[index]?.data ?? null,
+  }))
+  return <ProjectDetail project={project.data} documents={projectDocuments} testCases={testCases.data}
+    role={user.role} uploading={upload.isPending} analyzingDocumentId={analysis.isPending ? analysis.variables : undefined}
+    uploadError={upload.isError ? '기획서를 업로드하지 못했습니다.' : undefined}
+    analysisError={analysis.isError ? 'AI 분석 요청에 실패했습니다.' : undefined}
+    onUpload={(values) => upload.mutateAsync(values).then(() => undefined)}
+    onAnalyze={(documentId) => analysis.mutate(documentId)}
+    onOpenDocument={(documentId) => navigate(`/documents/${documentId}`)} />
 }
 
 function App() {
@@ -834,6 +1037,10 @@ function App() {
       <Route
         path="/projects/new"
         element={userQuery.data?.role === 'QA' ? <ProjectCreateScreen /> : <Navigate to={userQuery.data ? '/projects' : '/login'} replace />}
+      />
+      <Route
+        path="/projects/:projectId"
+        element={userQuery.data ? <ProjectDetailScreen user={userQuery.data} /> : <Navigate to="/login" replace />}
       />
       <Route
         path="/documents/:documentId"

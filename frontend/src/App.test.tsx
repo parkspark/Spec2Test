@@ -1,7 +1,7 @@
 import { cleanup, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { DocumentViewer, EvidencePanel, LoginForm, OutputDownload, ProjectCreateForm, ProjectHome, TestCaseSheet, type Project, type TestCaseItem } from './App'
+import { DocumentViewer, EvidencePanel, LoginForm, OutputDownload, ProjectCreateForm, ProjectDetail, ProjectHome, TestCaseSheet, type Project, type ProjectDocument, type TestCaseItem } from './App'
 
 afterEach(cleanup)
 
@@ -104,6 +104,55 @@ const testCase: TestCaseItem = {
   notes: ['AI 추론 포함', '기획 확인 필요'],
   requiresHumanReview: true,
 }
+
+const projectDocument: ProjectDocument = {
+  id: 4,
+  title: '전투 시스템 기획서',
+  originalFileName: 'combat.pdf',
+  pageCount: 8,
+  processingStatus: 'READY',
+  createdBy: 1,
+  createdAt: '2026-07-15T12:00:00',
+  analysis: null,
+}
+
+describe('project detail', () => {
+  const project = { id: 1, name: '신작 RPG', description: '전투 시스템', gameGenre: 'RPG', platform: 'PC' }
+
+  it('shows upload only to QA when the project has no documents', async () => {
+    const onUpload = vi.fn().mockResolvedValue(undefined)
+    const props = { project, documents: [], testCases: [], onUpload, onAnalyze: vi.fn(), onOpenDocument: vi.fn() }
+    const { rerender } = render(<ProjectDetail {...props} role="USER" />)
+    expect(screen.getByText('아직 업로드된 기획서가 없습니다.')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'PDF 업로드' })).not.toBeInTheDocument()
+
+    rerender(<ProjectDetail {...props} role="QA" />)
+    await userEvent.type(screen.getByLabelText('기획서 제목'), '전투 기획서')
+    await userEvent.upload(screen.getByLabelText('PDF 파일'), new File(['pdf'], 'combat.pdf', { type: 'application/pdf' }))
+    await userEvent.click(screen.getByRole('button', { name: 'PDF 업로드' }))
+    expect(onUpload).toHaveBeenCalled()
+  })
+
+  it('allows QA to request analysis for a ready document', async () => {
+    const onAnalyze = vi.fn()
+    render(<ProjectDetail project={project} documents={[projectDocument]} testCases={[]} role="QA"
+      onUpload={vi.fn()} onAnalyze={onAnalyze} onOpenDocument={vi.fn()} />)
+
+    await userEvent.click(screen.getByRole('button', { name: 'AI 분석 요청' }))
+    expect(onAnalyze).toHaveBeenCalledWith(4)
+  })
+
+  it('shows analysis tabs and a simple test case list when results exist', () => {
+    render(<ProjectDetail project={project}
+      documents={[{ ...projectDocument, analysis: { id: 20, planningDocumentId: 4, status: 'COMPLETED',
+        requestedAt: '2026-07-15T12:00:00', completedAt: '2026-07-15T12:01:00' } }]}
+      testCases={[testCase]} role="USER" onUpload={vi.fn()} onAnalyze={vi.fn()} onOpenDocument={vi.fn()} />)
+
+    expect(screen.getByRole('link', { name: '테스트 케이스 보기' })).toBeInTheDocument()
+    expect(screen.getAllByRole('tab')).toHaveLength(4)
+    expect(screen.getByText(/TC 1\. 무료 뽑기 정상 사용/)).toBeInTheDocument()
+  })
+})
 
 describe('test case sheet', () => {
   it('renders ten columns, evidence summary, and note tags', () => {
