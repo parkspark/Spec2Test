@@ -10,6 +10,14 @@
 
 ---
 
+## [2026-07-15 10:53] T-14 10컬럼 테스트 케이스 생성 단계 구현 + TestCase 저장 — DONE
+- 구현 내용: 확정 분류와 요구사항을 재사용해 10컬럼 테스트 케이스를 생성하고, 요구사항·분류 일치와 Evidence 필수값을 검증해 GENERATED 상태로 저장한다.
+  TestCase 전체 필드와 JSONB 5종, 관계 및 Enum 제약조건을 V5 Flyway 마이그레이션과 JPA 엔티티로 추가했다.
+- 생성/수정 파일: TestCaseGenerationService.java, TestCase.java, TestCaseRepository.java, TestCaseStatus.java, TestCaseGenerationResponse.java, V5__create_test_cases.sql, TestCaseGenerationServiceTest.java
+- 테스트: `cd backend && ./gradlew test --no-daemon --console=plain --no-problems-report` 전체 통과 (Gradle BUILD SUCCESSFUL)
+- 다음 작업자를 위한 메모: T-15에서 모호성 저장 후 관련 테스트 케이스 notes에 `관련 모호성: AMB-001`, `기획 확인 필요`를 연동한다.
+- 커밋 실패 — 사람이 수동 커밋 필요 (.git ACL 문제). 사람이 수동 커밋 처리함
+
 ## [2026-07-15 10:34] 사람 개입 — T-13 완료 확인
 - 원인: 테스트 픽스처 JSON 문자열의 이스케이프 오류 ("[{\pageNumber\:1}]")로 컴파일 실패
 - 조치: 텍스트 블록(""") 또는 올바른 \" 이스케이프로 수정

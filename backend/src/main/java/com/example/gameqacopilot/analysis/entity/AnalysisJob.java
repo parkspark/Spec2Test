@@ -55,6 +55,11 @@ public class AnalysisJob {
         if (tokenUsage != null) this.tokenUsage = (this.tokenUsage == null ? 0 : this.tokenUsage) + tokenUsage;
     }
 
+    public void recordTestCases(String rawResponse, Long tokenUsage) {
+        this.rawResponse = rawResponse;
+        if (tokenUsage != null) this.tokenUsage = (this.tokenUsage == null ? 0 : this.tokenUsage) + tokenUsage;
+    }
+
     public void fail(String reason) {
         this.status = AnalysisJobStatus.FAILED;
         this.failureReason = reason;
@@ -62,6 +67,7 @@ public class AnalysisJob {
     }
 
     public Long getId() { return id; }
+    public PlanningDocument getPlanningDocument() { return planningDocument; }
     public Long getPlanningDocumentId() { return planningDocument.getId(); }
     public AnalysisJobStatus getStatus() { return status; }
     public String getModelName() { return modelName; }

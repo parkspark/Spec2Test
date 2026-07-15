@@ -75,6 +75,11 @@ public class AnalysisJobService {
     }
 
     @Transactional
+    public void recordTestCases(Long id, String rawResponse, Long tokenUsage) {
+        requireJob(id).recordTestCases(rawResponse, tokenUsage);
+    }
+
+    @Transactional
     public void fail(Long id, String reason) {
         requireJob(id).fail(reason);
     }

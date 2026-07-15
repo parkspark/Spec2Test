@@ -53,5 +53,7 @@ public class Requirement {
     public Long getId() { return id; }
     public String getExternalRequirementId() { return externalRequirementId; }
     public String getMajorCategory() { return majorCategory; }
+    public String getMiddleCategory() { return middleCategory; }
+    public String getMinorCategory() { return minorCategory; }
     public String getEvidences() { return evidences; }
 }

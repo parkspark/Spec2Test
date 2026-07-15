@@ -64,6 +64,7 @@ public class PlanningDocument {
     }
 
     public Long getId() { return id; }
+    public Project getProject() { return project; }
     public Long getProjectId() { return project.getId(); }
     public String getTitle() { return title; }
     public String getOriginalFileName() { return originalFileName; }
