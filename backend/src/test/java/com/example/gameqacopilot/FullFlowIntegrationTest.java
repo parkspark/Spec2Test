@@ -21,6 +21,7 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.ai.chat.messages.AssistantMessage;
@@ -48,10 +49,7 @@ class FullFlowIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        for (String table : List.of("lats_loop_logs", "outputs", "ambiguities", "test_cases",
-                "requirements", "analysis_jobs", "planning_documents", "projects", "users")) {
-            jdbcClient.sql("DELETE FROM " + table).update();
-        }
+        clearData();
         jdbcClient.sql("INSERT INTO users (email, password, name, role) VALUES (?, ?, ?, ?)")
                 .params("qa-flow@example.com", "unused", "QA", "QA").update();
         Long userId = jdbcClient.sql("SELECT id FROM users WHERE email = 'qa-flow@example.com'")
@@ -61,6 +59,18 @@ class FullFlowIntegrationTest {
                 .params(userId, "Full flow", "ACTIVE").update();
         projectId = jdbcClient.sql("SELECT id FROM projects WHERE name = 'Full flow'")
                 .query(Long.class).single();
+    }
+
+    @AfterEach
+    void tearDown() {
+        clearData();
+    }
+
+    private void clearData() {
+        for (String table : List.of("lats_loop_logs", "outputs", "ambiguities", "test_cases",
+                "requirements", "analysis_jobs", "planning_documents", "projects", "users")) {
+            jdbcClient.sql("DELETE FROM " + table).update();
+        }
     }
 
     @Test

@@ -8,6 +8,8 @@ import org.springframework.data.repository.query.Param;
 public interface TestCaseRepository extends JpaRepository<TestCase, Long> {
     List<TestCase> findAllByAnalysisJob_Id(Long analysisJobId);
 
+    List<TestCase> findAllByProject_IdOrderByDisplayOrder(Long projectId);
+
     List<TestCase> findAllByPlanningDocument_IdAndStatusOrderByDisplayOrder(
             Long planningDocumentId, TestCaseStatus status);
 

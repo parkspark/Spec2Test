@@ -28,6 +28,12 @@
 
 ---
 
+## [2026-07-15 16:32] T-35 PostgreSQL 무필터 테스트 케이스 목록 조회 오류 수정 — DONE
+- 구현 내용: 필터 없는 프로젝트 테스트 케이스 목록은 nullable 조건이 없는 Spring Data 파생 쿼리로 조회하고, 필터가 있을 때만 기존 필터 쿼리를 사용하도록 분기했다.
+- 생성/수정 파일: TestCaseRepository.java, TestCaseQueryService.java, TestCaseQueryServiceTest.java, FullFlowIntegrationTest.java, plan/BACKLOG.md, PROGRESS.md
+- 테스트: `cd backend && ./gradlew test --no-daemon --console=plain --rerun-tasks` 통과 (Gradle BUILD SUCCESSFUL)
+- 다음 작업자를 위한 메모: 실행 중인 백엔드는 재시작해야 변경된 저장소 쿼리가 반영된다. FullFlowIntegrationTest는 생성한 자식 데이터를 종료 시 정리해 전체 테스트의 외래키 충돌을 방지한다.
+
 ## [2026-07-15 16:22] T-34 프론트 프로젝트 목록·생성 화면 — DONE
 - 구현 내용: 로그인 후 `/projects` 랜딩에서 프로젝트명·장르·플랫폼·기획서 수·상태별 테스트 케이스 수·최근 분석일을 표시하고, QA에게만 생성 버튼과 `/projects/new` 폼을 제공한다. 생성 성공 시 목록 캐시를 갱신하고 목록으로 이동한다.
 - 생성/수정 파일: frontend/src/App.tsx, frontend/src/App.css, frontend/src/App.test.tsx, plan/BACKLOG.md, PROGRESS.md

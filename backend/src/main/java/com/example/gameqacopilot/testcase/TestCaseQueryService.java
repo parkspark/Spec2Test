@@ -34,9 +34,17 @@ public class TestCaseQueryService {
             AiAnalysisResponse.Confidence confidence,
             String keyword) {
         if (!projects.existsById(projectId)) throw new NoSuchElementException("Project not found");
-        var items = testCases.findAllFiltered(projectId, analysisId, status,
-                        value(majorCategory), value(middleCategory), value(minorCategory),
-                        testType, confidence, value(keyword)).stream()
+        majorCategory = value(majorCategory);
+        middleCategory = value(middleCategory);
+        minorCategory = value(minorCategory);
+        keyword = value(keyword);
+        var entities = analysisId == null && status == null && majorCategory == null
+                        && middleCategory == null && minorCategory == null && testType == null
+                        && confidence == null && keyword == null
+                ? testCases.findAllByProject_IdOrderByDisplayOrder(projectId)
+                : testCases.findAllFiltered(projectId, analysisId, status, majorCategory,
+                        middleCategory, minorCategory, testType, confidence, keyword);
+        var items = entities.stream()
                 .map(this::response)
                 .toList();
         return new TestCaseListResponse(items);
