@@ -362,6 +362,9 @@ export function ProjectDetail({
               <p>{document.originalFileName} · {document.pageCount}페이지 · {new Date(document.createdAt).toLocaleDateString('ko-KR')}</p></div>
             <span className={`status-badge status-${document.processingStatus.toLowerCase()}`}>{document.processingStatus}</span>
             {document.failureReason && <p className="error">{document.failureReason}</p>}
+            {document.analysis?.status === 'FAILED' && <p className="error" role="alert">
+              AI 분석 실패: {document.analysis.failureReason ?? '실패 원인을 확인할 수 없습니다.'}
+            </p>}
             {document.processingStatus === 'READY' && <div className="document-actions">
               {documentTestCases.length > 0 ? <a href="#analysis-results">테스트 케이스 보기</a>
                 : role === 'QA' && <Button disabled={analyzingDocumentId !== undefined || analyzing}

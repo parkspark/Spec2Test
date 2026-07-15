@@ -36,7 +36,8 @@
 - 구현 내용: 기획서 업로드 중 `UPLOADED → PROCESSING → READY`를 각각 DB에 저장하고, 프론트는 업로드 중 문서 상태를 1.5초, AI 분석 중 작업 상태를 3초 간격으로 폴링한다. 요청 실패 후에도 문서·분석·테스트 케이스 캐시를 갱신한다.
 - 생성/수정 파일: PlanningDocument.java, PlanningDocumentService.java, PlanningDocumentServiceTest.java, frontend/src/App.tsx, frontend/src/App.test.tsx, plan/BACKLOG.md, PROGRESS.md
 - 테스트: `cd frontend && npm run build && npm test -- --run` 통과 (13개), `cd backend && ./gradlew test --no-daemon --console=plain --rerun-tasks` 통과 (Gradle BUILD SUCCESSFUL)
-- 차단 사유: 8080/5173 리슨과 프론트 `/projects/1` 200은 확인했으나, 실행 중인 백엔드는 사용자 터미널의 원격 DB/OpenAI 환경을 사용한다. 현재 셸에는 해당 환경 변수와 유효한 QA 로그인 정보가 없고 `qa@example.com/password`는 401이어서 실제 세션 E2E를 계속할 수 없다. 변경 클래스 반영을 위해 사용자 환경을 유지한 백엔드 재시작도 필요하다.
+- 차단 사유: 실행 환경의 `AI_MODEL=GPT-5.2`에 대해 OpenAI가 `model_not_found`를 반환한다. 접근 가능한 정확한 모델 ID로 백엔드를 재시작해야 실제 분석 완료와 TestCase 생성을 검증할 수 있다.
+- 재개 확인: `qa@test.com` QA 로그인, 프로젝트 1/문서 1 `READY`, 분석 작업 1 생성까지 실제 API로 확인했다. 분석은 실행 환경의 `AI_MODEL=GPT-5.2`에 대해 OpenAI가 `model_not_found`를 반환해 `FAILED`로 종료됐으며 TestCase는 0건이다. 유효한 모델 ID로 백엔드를 재시작한 뒤 재시도해야 한다.
 - 다음 작업자를 위한 메모: 백엔드를 재시작하고 유효한 QA 이메일/비밀번호를 받은 뒤, 테스트 산출물 PDF로 업로드·문서 목록 상태·분석 POST·최종 TestCase 목록을 curl 세션으로 확인하고 DONE 처리한다.
 
 ## [2026-07-15 16:44] T-36 프론트 프로젝트 상세·업로드·AI 분석 결과 화면 — DONE

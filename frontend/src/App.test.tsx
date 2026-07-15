@@ -157,6 +157,16 @@ describe('project detail', () => {
     expect(screen.getAllByRole('tab')).toHaveLength(4)
     expect(screen.getByText(/TC 1\. 무료 뽑기 정상 사용/)).toBeInTheDocument()
   })
+
+  it('shows the stored analysis failure reason and allows retry', () => {
+    render(<ProjectDetail project={project}
+      documents={[{ ...projectDocument, analysis: { id: 21, planningDocumentId: 4, status: 'FAILED',
+        requestedAt: '2026-07-15T12:00:00', completedAt: '2026-07-15T12:01:00', failureReason: 'model_not_found' } }]}
+      testCases={[]} role="QA" onUpload={vi.fn()} onAnalyze={vi.fn()} onOpenDocument={vi.fn()} />)
+
+    expect(screen.getByRole('alert')).toHaveTextContent('AI 분석 실패: model_not_found')
+    expect(screen.getByRole('button', { name: 'AI 분석 요청' })).toBeEnabled()
+  })
 })
 
 describe('test case sheet', () => {
