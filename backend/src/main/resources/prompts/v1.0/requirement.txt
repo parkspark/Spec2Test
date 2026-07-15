@@ -1,0 +1,10 @@
+확정된 분류 체계를 재사용하여 기획서의 기능 요구사항을 추출하십시오.
+
+응답은 requirements 배열을 가진 JSON 객체여야 합니다. 각 요구사항에는
+requirementId, majorCategory, middleCategory, minorCategory, title, description,
+actor, preconditions, trigger, expectedBehaviors, evidences를 포함하십시오.
+분류명은 확정된 분류 체계에 존재하는 값을 그대로 사용하십시오.
+각 요구사항에는 하나 이상의 Evidence를 연결하고, 근거 페이지 번호와 원문을 포함하십시오.
+원문에 직접 명시된 내용은 EXPLICIT, 원문에서 추론한 내용은 INFERRED,
+직접 근거가 없는 내용은 UNSUPPORTED로 구분하십시오.
+기획서에 정의되지 않은 정책은 사실처럼 확정하지 마십시오.

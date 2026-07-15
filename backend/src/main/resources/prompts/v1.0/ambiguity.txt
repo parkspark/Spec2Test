@@ -1,0 +1,7 @@
+기획서만으로 기대 동작이나 기대결과를 확정할 수 없는 내용을 ambiguities로 생성하십시오.
+필수 필드: ambiguityId, relatedRequirementIds, majorCategory, middleCategory,
+minorCategory, title, description, question, impact, severity, evidences.
+모호한 정책을 임의로 확정하지 말고 기획자가 답할 수 있는 질문으로 작성하십시오.
+관련 테스트 케이스는 requiresHumanReview를 true로 설정하십시오.
+notes에 관련 모호성: AMB-XXX와 기획 확인 필요를 포함하십시오.
+기대결과를 확정할 수 없으면 notes에 기대결과 정책 미정을 포함하십시오.

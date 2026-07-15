@@ -1,0 +1,35 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "type":"object",
+  "required":["documentSummary","categoryTree","requirements","testCases","ambiguities","qualityWarnings"],
+  "properties":{
+    "documentSummary":{"$ref":"#/$defs/documentSummary"},
+    "categoryTree":{"type":"array","items":{"$ref":"#/$defs/categoryTree"}},
+    "requirements":{"type":"array","items":{"$ref":"#/$defs/requirement"}},
+    "testCases":{"type":"array","items":{"$ref":"#/$defs/testCase"}},
+    "ambiguities":{"type":"array","items":{"$ref":"#/$defs/ambiguity"}},
+    "qualityWarnings":{"$ref":"#/$defs/strings"}
+  },
+  "$defs":{
+    "strings":{"type":"array","items":{"type":"string"}},
+    "documentSummary":{"type":"object","required":["title","featureSummary","actors"],"properties":{"title":{"type":"string"},"featureSummary":{"type":"string"},"actors":{"$ref":"#/$defs/strings"}}},
+    "categoryTree":{"type":"object","required":["majorCategory","middleCategories"],"properties":{"majorCategory":{"type":"string"},"middleCategories":{"type":"array","items":{"$ref":"#/$defs/middleCategory"}}}},
+    "middleCategory":{"type":"object","required":["name","minorCategories"],"properties":{"name":{"type":"string"},"minorCategories":{"$ref":"#/$defs/strings"}}},
+    "requirement":{"type":"object","required":["requirementId","majorCategory","middleCategory","minorCategory","title","description","actor","preconditions","trigger","expectedBehaviors","evidences"],"properties":{
+      "requirementId":{"type":"string"},"majorCategory":{"type":"string"},"middleCategory":{"type":"string"},"minorCategory":{"type":"string"},"title":{"type":"string"},"description":{"type":"string"},"actor":{"type":"string"},"preconditions":{"$ref":"#/$defs/strings"},"trigger":{"type":"string"},"expectedBehaviors":{"$ref":"#/$defs/strings"},"evidences":{"type":"array","items":{"$ref":"#/$defs/evidence"},"minItems":1}
+    }},
+    "testCase":{"type":"object","required":["testCaseId","requirementId","displayOrder","majorCategory","middleCategory","minorCategory","testItem","testType","priority","preconditions","testSteps","expectedResults","confidence","requiresHumanReview","evidences","notes"],"properties":{
+      "testCaseId":{"type":"string"},"requirementId":{"type":"string"},"displayOrder":{"type":"integer","minimum":1},"majorCategory":{"type":"string"},"middleCategory":{"type":"string"},"minorCategory":{"type":"string"},"testItem":{"type":"string"},
+      "testType":{"enum":["HAPPY_PATH","BOUNDARY","EXCEPTION","VALIDATION","STATE_TRANSITION","TIME","DUPLICATION","DATA_PERSISTENCE"]},"priority":{"type":"string"},"preconditions":{"$ref":"#/$defs/strings"},"testSteps":{"type":"array","items":{"$ref":"#/$defs/testStep"}},"expectedResults":{"$ref":"#/$defs/strings"},"confidence":{"$ref":"#/$defs/level"},"requiresHumanReview":{"type":"boolean"},"evidences":{"type":"array","items":{"$ref":"#/$defs/evidence"},"minItems":1},"notes":{"$ref":"#/$defs/strings"}
+    }},
+    "testStep":{"type":"object","required":["stepNumber","action","expectedResult"],"properties":{"stepNumber":{"type":"integer","minimum":1},"action":{"type":"string"},"expectedResult":{"type":"string"}}},
+    "ambiguity":{"type":"object","required":["ambiguityId","relatedRequirementIds","majorCategory","middleCategory","minorCategory","title","description","question","impact","severity","evidences"],"properties":{
+      "ambiguityId":{"type":"string"},"relatedRequirementIds":{"$ref":"#/$defs/strings"},"majorCategory":{"type":"string"},"middleCategory":{"type":"string"},"minorCategory":{"type":"string"},"title":{"type":"string"},"description":{"type":"string"},"question":{"type":"string"},"impact":{"type":"string"},"severity":{"type":"string"},"evidences":{"type":"array","items":{"$ref":"#/$defs/evidence"},"minItems":1}
+    }},
+    "evidence":{"type":"object","required":["evidenceType","pageNumber","sectionTitle","sourceText","sourceElementType","reason"],"properties":{
+      "evidenceType":{"enum":["EXPLICIT","INFERRED","UNSUPPORTED"]},"verificationStatus":{"enum":["EXACT","PARTIAL","SIMILAR","NOT_FOUND"]},"pageNumber":{"type":"integer","minimum":1},"sectionTitle":{"type":"string"},"sourceElementId":{"type":"string"},"sourceText":{"type":"string"},"sourceElementType":{"enum":["TEXT","TABLE","IMAGE","CAPTION"]},"boundingBox":{"$ref":"#/$defs/boundingBox"},"reason":{"type":"string"}
+    }},
+    "boundingBox":{"type":"object","required":["x","y","width","height"],"properties":{"x":{"type":"number","minimum":0,"maximum":1},"y":{"type":"number","minimum":0,"maximum":1},"width":{"type":"number","minimum":0,"maximum":1},"height":{"type":"number","minimum":0,"maximum":1}}},
+    "level":{"enum":["HIGH","MEDIUM","LOW"]}
+  }
+}

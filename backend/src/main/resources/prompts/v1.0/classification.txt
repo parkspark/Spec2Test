@@ -1,0 +1,9 @@
+테스트 케이스를 생성하기 전에 기획서의 기능 구조를 추출하십시오.
+
+categoryTree의 각 항목은 majorCategory와 middleCategories를 포함하고,
+각 middleCategories 항목은 name과 minorCategories를 포함해야 합니다.
+분류명은 테스트 유형이 아니라 게임 기능과 화면의 계층 구조를 나타냅니다.
+기획서에 나타난 명칭을 우선 사용하고, 이후 requirements와 testCases에서
+동일한 기능에는 동일한 majorCategory, middleCategory, minorCategory를 재사용하십시오.
+적절한 중분류 또는 소분류가 없으면 빈 문자열 대신 -를 반환하십시오.
+응답은 categoryTree와 이를 뒷받침하는 원문 evidences를 포함한 JSON 객체로 반환하십시오.

@@ -1,0 +1,14 @@
+requirements와 categoryTree를 근거로 testCases를 생성하십시오.
+필수 필드: testCaseId, requirementId, displayOrder, majorCategory, middleCategory,
+minorCategory, testItem, testType, priority, preconditions, testSteps,
+expectedResults, confidence, requiresHumanReview, evidences, notes.
+각 testSteps 항목에는 stepNumber, action, expectedResult를 포함하십시오.
+적절한 중분류 또는 사전조건이 없으면 빈 문자열 대신 -를 반환하십시오.
+testItem은 하나의 검증 목적만 포함하십시오.
+testSteps는 실제 사용자가 수행할 수 있는 동작과 확인 대상을 명시하십시오.
+expectedResults는 화면 문구, 버튼 상태, 데이터·횟수 변화, 저장 결과처럼 관찰 가능하게 작성하십시오.
+정상 처리 같은 모호한 표현만 사용하지 마십시오.
+HAPPY_PATH, BOUNDARY, EXCEPTION, VALIDATION을 검토하십시오.
+STATE_TRANSITION, TIME, DUPLICATION, DATA_PERSISTENCE도 관련된 경우 검토하십시오.
+최소·최대·기준값, 잘못된 입력·상태, 중복 요청, 시간 경계, 데이터 저장을 검토하십시오.
+서버 처리 후 클라이언트 응답 실패도 검토하되 관련 없는 유형은 생성하지 마십시오.
