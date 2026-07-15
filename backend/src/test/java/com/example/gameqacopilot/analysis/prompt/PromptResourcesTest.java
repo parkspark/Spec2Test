@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
 class PromptResourcesTest {
     @Test
     void packagesVersionedPromptsWithRequiredRulesAndSchemaNames() throws Exception {
-        var names = List.of("system", "classification", "test-case", "ambiguity", "evidence", "prohibitions");
+        var names = List.of("system", "classification", "requirement", "test-case", "ambiguity", "evidence", "prohibitions");
         var content = new StringBuilder();
         for (var name : names) {
             try (var input = getClass().getResourceAsStream("/prompts/v1.0/" + name + ".txt")) {

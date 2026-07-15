@@ -62,6 +62,18 @@ public class AnalysisJobService {
         requireJob(id).recordClassification(rawResponse, tokenUsage);
     }
 
+    @Transactional(readOnly = true)
+    public RequirementInput prepareRequirements(Long id) {
+        var job = requireJob(id);
+        var document = documents.findById(job.getPlanningDocumentId()).orElseThrow();
+        return new RequirementInput(job, AnalysisInput.from(document));
+    }
+
+    @Transactional
+    public void recordRequirements(Long id, String rawResponse, Long tokenUsage) {
+        requireJob(id).recordRequirements(rawResponse, tokenUsage);
+    }
+
     @Transactional
     public void fail(Long id, String reason) {
         requireJob(id).fail(reason);
@@ -78,4 +90,6 @@ public class AnalysisJobService {
                     document.getStoredFilePath(), document.getPageCount());
         }
     }
+
+    public record RequirementInput(AnalysisJob job, AnalysisInput document) {}
 }

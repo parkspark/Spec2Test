@@ -9,6 +9,8 @@ import static org.mockito.Mockito.verify;
 
 import com.example.gameqacopilot.common.security.CurrentUser;
 import com.example.gameqacopilot.analysis.service.CategoryClassificationService;
+import com.example.gameqacopilot.analysis.dto.CategoryClassificationResponse;
+import com.example.gameqacopilot.requirement.RequirementExtractionService;
 import com.example.gameqacopilot.user.UserRole;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,6 +27,7 @@ class AnalysisJobIntegrationTest {
     @Autowired MockMvc mockMvc;
     @Autowired JdbcClient jdbcClient;
     @MockitoBean CategoryClassificationService classifications;
+    @MockitoBean RequirementExtractionService requirements;
     private CurrentUser qa;
     private CurrentUser regularUser;
     private Long documentId;
@@ -57,12 +60,16 @@ class AnalysisJobIntegrationTest {
 
     @Test
     void qaRequestsAnalysisAndAuthenticatedUsersCanReadIt() throws Exception {
+        var classification = new CategoryClassificationResponse(java.util.List.of(), java.util.List.of());
+        org.mockito.Mockito.when(classifications.classify(org.mockito.ArgumentMatchers.anyLong()))
+                .thenReturn(classification);
         mockMvc.perform(post("/api/documents/{documentId}/analyses", documentId).with(user(qa)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.status").value("PENDING"))
                 .andExpect(jsonPath("$.data.planningDocumentId").value(documentId));
         Long analysisId = jdbcClient.sql("SELECT id FROM analysis_jobs").query(Long.class).single();
         verify(classifications).classify(analysisId);
+        verify(requirements).extract(analysisId, classification.categoryTree());
 
         mockMvc.perform(get("/api/analyses/{analysisId}", analysisId).with(user(regularUser)))
                 .andExpect(status().isOk())

@@ -10,6 +10,17 @@
 
 ---
 
+## [2026-07-15 10:34] 사람 개입 — T-13 완료 확인
+- 원인: 테스트 픽스처 JSON 문자열의 이스케이프 오류 ("[{\pageNumber\:1}]")로 컴파일 실패
+- 조치: 텍스트 블록(""") 또는 올바른 \" 이스케이프로 수정
+- ./gradlew test 전체 통과 확인
+
+## [2026-07-15 10:24] T-13 요구사항 추출 단계 구현 + Requirement 저장 — BLOCKED
+- 구현 내용: 분류 체계를 재사용하는 멀티모달 요구사항 추출 서비스, Requirement 엔티티·저장소·V4 Flyway 마이그레이션, 요구사항 프롬프트와 단위 테스트를 작성했으나 검증 실패로 완료 처리하지 않았다.
+- 생성/수정 파일: RequirementExtractionService.java, Requirement.java, RequirementRepository.java, RequirementExtractionResponse.java, V4__create_requirements.sql, requirement.txt, RequirementExtractionServiceTest.java, AnalysisJob 관련 서비스·컨트롤러·통합 테스트
+- 테스트: `cd backend && ./gradlew test --tests com.example.gameqacopilot.requirement.RequirementExtractionServiceTest` 실패. 3회 수정 후 테스트 픽스처 36행의 JSON 문자열이 `[{\pageNumber\:1}]`로 손상되어 `compileTestJava` illegal escape character 오류가 남았다. 전체 테스트는 실행하지 못했다.
+- 다음 작업자를 위한 메모: RequirementExtractionServiceTest 36행의 페이지 JSON을 Java 텍스트 블록 등으로 유효하게 복구한 뒤 대상 테스트와 `./gradlew test` 전체를 다시 실행해야 한다. 이번 회차 변경은 커밋하지 않았다.
+
 ## [2026-07-15 10:07] T-12 Spring AI ChatClient 멀티모달 호출 + 기능 분류 추출 단계 구현 — DONE
 - 구현 내용: Spring AI ChatClient에 추출 텍스트·페이지 요소 JSON·모든 페이지 이미지를 함께 전달해 기능 분류 구조를 생성한다.
   구조화 응답의 Evidence와 대/중/소분류 필수값(`-` 포함)을 검증하고, 모델·프롬프트 버전·원문 응답·토큰 사용량 및 실패 상태를 AnalysisJob에 기록한다.

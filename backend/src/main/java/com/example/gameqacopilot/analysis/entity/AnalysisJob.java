@@ -50,6 +50,11 @@ public class AnalysisJob {
         this.tokenUsage = tokenUsage;
     }
 
+    public void recordRequirements(String rawResponse, Long tokenUsage) {
+        this.rawResponse = rawResponse;
+        if (tokenUsage != null) this.tokenUsage = (this.tokenUsage == null ? 0 : this.tokenUsage) + tokenUsage;
+    }
+
     public void fail(String reason) {
         this.status = AnalysisJobStatus.FAILED;
         this.failureReason = reason;
