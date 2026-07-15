@@ -9,6 +9,13 @@
 
 ---
 
+## [2026-07-15 13:48] T-24 Output + Lats_Loop_Log 테이블 마이그레이션 — DONE
+- 구현 내용: Output 최종 상태·파일·외부 연동·요청/응답 데이터를 통합 저장하는 outputs 테이블과 Actor–Evaluator 회차별 초안·점수·피드백을 저장하는 lats_loop_logs 테이블을 V7 Flyway 마이그레이션으로 추가했다.
+  산출물 유형·상태·외부 서비스 CHECK 제약과 프로젝트·문서·모호성·사용자·부모 Output FK를 적용했다.
+- 생성/수정 파일: V7__create_outputs_and_lats_loop_logs.sql, OutputMigrationTest.java, plan/BACKLOG.md, PROGRESS.md
+- 테스트: `cd backend && ./gradlew test --no-daemon --console=plain` 전체 48개 통과 (Gradle BUILD SUCCESSFUL)
+- 다음 작업자를 위한 메모: 다음 작업은 T-25 Actor–Evaluator 루프 프레임워크다. 이번 작업은 스키마만 추가했으며 루프 실행·상태 전이 로직은 구현하지 않았다.
+
 ## [2026-07-15 13:43] T-23 개별 승인/반려 API + 확인 모달 + 반려 사유 필수 입력 — DONE
 - 구현 내용: QA 전용 개별 승인·반려 API와 GENERATED 상태에서만 가능한 단방향 상태 전이를 구현하고 검토자·검토 시각·반려 사유를 기존 TestCase 필드에 저장한다.
   프론트에 승인 확인 모달과 필수 반려 사유 입력 모달을 연결했으며 USER에게는 승인·반려 동작을 노출하지 않는다.
