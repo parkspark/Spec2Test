@@ -1,4 +1,4 @@
-# Spec2Test — Game QA Copilot
+# Spec2Test
 
 PDF 게임 기획서를 분석해 기능 분류, 요구사항, 10컬럼 QA 테스트 케이스와 모호한 요구사항을 생성하고, 원문 Evidence 검증과 개별 승인·반려를 거쳐 CSV/Markdown 산출물을 만드는 MVP입니다.
 
